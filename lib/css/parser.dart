@@ -3,8 +3,10 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart' as material;
+import 'package:megami/megami.dart';
 import 'package:source_span/source_span.dart';
 
 import 'src/messages.dart';
@@ -1822,7 +1824,7 @@ class _Parser {
     'padding-bottom': _paddingPartBottom
   };
 
-  static const Map<String, int> _nameToFontWeight = {
+  static final Map<String, FontWeight> _nameToFontWeight = {
     'bold': FontWeight.bold,
     'normal': FontWeight.normal
   };
@@ -1905,7 +1907,10 @@ class _Parser {
         //              https://github.com/dart-lang/csslib/issues/1
         var expr = exprs.expressions[0];
         if (expr is NumberTerm) {
-          var fontExpr = FontExpression(expr.span, weight: expr.value);
+          var weight = FontWeight.values.firstWhere((element) {
+            return (element.index + 1) * 100 == expr.value;
+            }, orElse: () => FontWeight.normal);
+          var fontExpr = FontExpression(expr.span, weight: weight);
           return _mergeFontStyles(fontExpr, dartStyles);
         } else if (expr is LiteralTerm) {
           var weight = _nameToFontWeight[expr.value.toString()];
@@ -1919,68 +1924,62 @@ class _Parser {
         if (exprs.expressions.length == 1) {
           var expr = exprs.expressions[0];
           if (expr is UnitTerm) {
-            var unitTerm = expr;
             // TODO(terry): Need to handle other units and LiteralTerm normal
             //              See https://github.com/dart-lang/csslib/issues/2.
-            if (unitTerm.unit == TokenKind.UNIT_LENGTH_PX ||
-                unitTerm.unit == TokenKind.UNIT_LENGTH_PT) {
-              var fontExpr = FontExpression(expr.span,
-                  lineHeight: LineHeight(expr.value, inPixels: true));
-              return _mergeFontStyles(fontExpr, dartStyles);
-            } else if (isChecked) {
-              _warning('Unexpected unit for line-height', expr.span);
-            }
+            var fontExpr = FontExpression(expr.span,
+                lineHeight: Dimen.fromUnit(expr));
+            return _mergeFontStyles(fontExpr, dartStyles);
           } else if (expr is NumberTerm) {
             var fontExpr = FontExpression(expr.span,
-                lineHeight: LineHeight(expr.value, inPixels: false));
+                lineHeight: Dimen(expr.value, DimenUnit.EM));
             return _mergeFontStyles(fontExpr, dartStyles);
           } else if (isChecked) {
             _warning('Unexpected value for line-height', expr.span);
           }
         }
         break;
-      case _marginPartMargin:
-        return MarginExpression.boxEdge(exprs.span, processFourNums(exprs));
-      case _borderPartBorder:
-        for (var expr in exprs.expressions) {
-          var v = marginValue(expr);
-          if (v != null) {
-            final box = BoxEdge.uniform(v);
-            return BorderExpression.boxEdge(exprs.span, box);
-          }
-        }
-        break;
-      case _borderPartWidth:
-        var v = marginValue(exprs.expressions[0]);
-        if (v != null) {
-          final box = BoxEdge.uniform(v);
-          return BorderExpression.boxEdge(exprs.span, box);
-        }
-        break;
-      case _paddingPartPadding:
-        return PaddingExpression.boxEdge(exprs.span, processFourNums(exprs));
-      case _marginPartLeft:
-      case _marginPartTop:
-      case _marginPartRight:
-      case _marginPartBottom:
-      case _borderPartLeft:
-      case _borderPartTop:
-      case _borderPartRight:
-      case _borderPartBottom:
-      case _borderPartLeftWidth:
-      case _borderPartTopWidth:
-      case _borderPartRightWidth:
-      case _borderPartBottomWidth:
-      case _heightPart:
-      case _widthPart:
-      case _paddingPartLeft:
-      case _paddingPartTop:
-      case _paddingPartRight:
-      case _paddingPartBottom:
-        if (exprs.expressions.isNotEmpty) {
-          return processOneNumber(exprs, styleType);
-        }
-        break;
+      // case _marginPartMargin:
+      //   return MarginExpression.boxEdge(exprs.span, processFourNums(exprs));
+      // case _borderPartBorder:
+      //   for (var expr in exprs.expressions) {
+      //     var v = marginValue(expr);
+      //     if (v != null) {
+      //       final box = BoxEdge.uniform(v);
+      //       return BorderExpression.boxEdge(exprs.span, box);
+      //     }
+      //   }
+      //   break;
+      // case _borderPartWidth:
+      //   var v = marginValue(exprs.expressions[0]);
+      //   if (v != null) {
+      //     final box = BoxEdge.uniform(v);
+      //     return BorderExpression.boxEdge(exprs.span, box);
+      //   }
+      //   break;
+      // case _paddingPartPadding:
+      //   return PaddingExpression.boxEdge(exprs.span, processFourNums(exprs));
+      // case _marginPartLeft:
+      // case _marginPartTop:
+      // case _marginPartRight:
+      // case _marginPartBottom:
+      // case _borderPartLeft:
+      // case _borderPartTop:
+      // case _borderPartRight:
+      // case _borderPartBottom:
+      // case _borderPartLeftWidth:
+      // case _borderPartTopWidth:
+      // case _borderPartRightWidth:
+      // case _borderPartBottomWidth:
+      // case _heightPart:
+      // case _widthPart:
+      // case _paddingPartLeft:
+      // case _paddingPartTop:
+      // case _paddingPartRight:
+      // case _paddingPartBottom:
+      //   if (exprs.expressions.isNotEmpty) {
+      //     return processOneNumber(exprs, styleType);
+      //   }
+      //   break;
     }
     return null;
   }
@@ -2344,6 +2343,7 @@ class _Parser {
       case TokenKind.UNIT_LENGTH_IN:
       case TokenKind.UNIT_LENGTH_PT:
       case TokenKind.UNIT_LENGTH_PC:
+      case TokenKind.UNIT_LENGTH_SP:
         term = LengthTerm(value, t.text, span, unitType);
         _next(); // Skip the unit
         break;
@@ -2671,21 +2671,20 @@ class ExpressionsProcessor {
     // * ##length in px, pt, etc.
     // * ##%, percent of parent elem's font-size
     // * inherit
-    LengthTerm size;
-    LineHeight lineHt;
+    Dimen size;
+    Dimen lineHt;
     var nextIsLineHeight = false;
     for (; _index < _exprs.expressions.length; _index++) {
       var expr = _exprs.expressions[_index];
-      if (size == null && expr is LengthTerm) {
+      if (size == null && Dimen.isDimen(expr)) {
         // font-size part.
-        size = expr;
+        size = Dimen.fromLiteral(expr);
       } else if (size != null) {
         if (expr is OperatorSlash) {
           // LineHeight could follow?
           nextIsLineHeight = true;
-        } else if (nextIsLineHeight && expr is LengthTerm) {
-          assert(expr.unit == TokenKind.UNIT_LENGTH_PX);
-          lineHt = LineHeight(expr.value, inPixels: true);
+        } else if (nextIsLineHeight && Dimen.isDimen(expr)) {
+          lineHt = Dimen.fromLiteral(expr);
           nextIsLineHeight = false;
           _index++;
           break;

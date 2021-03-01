@@ -1,14 +1,26 @@
+library megami;
 
-import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:collection/collection.dart';
+import 'package:vector_math/vector_math_64.dart' as vector;
+import 'css/parser.dart' hide Border;
+import 'css/visitor.dart';
+import 'dart:math';
+import 'dart:ui' as ui;
 
-class Megami {
-  static const MethodChannel _channel =
-      const MethodChannel('megami');
+part 'megami_colors.dart';
+part 'megami_dimens.dart';
+part 'megami_utils.dart';
 
-  static Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
-}
+part 'style.dart';
+part 'style_components.dart';
+part 'style_cubit.dart';
+part 'style_exts.dart';
+part 'style_animate.dart';

@@ -796,19 +796,19 @@ class Border implements _StyleProperty {
   }
 }
 
-/// Font style constants.
-class FontStyle {
-  /// Font style [normal] default.
-  static const String normal = 'normal';
-
-  /// Font style [italic] use explicity crafted italic font otherwise inclined
-  /// on the fly like oblique.
-  static const String italic = 'italic';
-
-  /// Font style [oblique] is rarely used. The normal style of a font is
-  /// inclined on the fly to the right by 8-12 degrees.
-  static const String oblique = 'oblique';
-}
+// /// Font style constants.
+// class FontStyle {
+//   /// Font style [normal] default.
+//   static const String normal = 'normal';
+//
+//   /// Font style [italic] use explicity crafted italic font otherwise inclined
+//   /// on the fly like oblique.
+//   static const String italic = 'italic';
+//
+//   /// Font style [oblique] is rarely used. The normal style of a font is
+//   /// inclined on the fly to the right by 8-12 degrees.
+//   static const String oblique = 'oblique';
+// }
 
 /// Font variant constants.
 class FontVariant {
@@ -819,24 +819,24 @@ class FontVariant {
   static const String smallCaps = 'small-caps';
 }
 
-/// Font weight constants values 100, 200, 300, 400, 500, 600, 700, 800, 900.
-class FontWeight {
-  /// Font weight normal [default]
-  static const int normal = 400;
-
-  /// Font weight bold
-  static const int bold = 700;
-
-  static const int wt100 = 100;
-  static const int wt200 = 200;
-  static const int wt300 = 300;
-  static const int wt400 = 400;
-  static const int wt500 = 500;
-  static const int wt600 = 600;
-  static const int wt700 = 700;
-  static const int wt800 = 800;
-  static const int wt900 = 900;
-}
+// /// Font weight constants values 100, 200, 300, 400, 500, 600, 700, 800, 900.
+// class FontWeight {
+//   /// Font weight normal [default]
+//   static const int normal = 400;
+//
+//   /// Font weight bold
+//   static const int bold = 700;
+//
+//   static const int wt100 = 100;
+//   static const int wt200 = 200;
+//   static const int wt300 = 300;
+//   static const int wt400 = 400;
+//   static const int wt500 = 500;
+//   static const int wt600 = 600;
+//   static const int wt700 = 700;
+//   static const int wt800 = 800;
+//   static const int wt900 = 900;
+// }
 
 /// Generic font family names.
 class FontGeneric {
@@ -915,11 +915,11 @@ class FontFamily {
   static const String webdings = 'webdings';
 }
 
-class LineHeight {
-  final num height;
-  final bool inPixels;
-  const LineHeight(this.height, {this.inPixels = true});
-}
+// class LineHeight {
+//   final num height;
+//   final bool inPixels;
+//   const LineHeight(this.height, {this.inPixels = true});
+// }
 
 // TODO(terry): Support @font-face fule.
 /// Font style support for size, family, weight, style, variant, and lineheight.
@@ -967,7 +967,7 @@ class Font implements _StyleProperty {
   // TODO(terry): Should support the values xx-small, small, large, xx-large,
   //              etc. (mapped to a pixel sized font)?
   /// Font size in pixels.
-  final num size;
+  final Dimen size;
 
   // TODO(terry): _family should be an immutable list, wrapper class to do this
   //              should exist in Dart.
@@ -978,17 +978,17 @@ class Font implements _StyleProperty {
   final List<String> family;
 
   /// Font weight from 100, 200, 300, 400, 500, 600, 700, 800, 900
-  final int weight;
+  final FontWeight weight;
 
   /// Style of a font normal, italic, oblique.
-  final String style;
+  final FontStyle style;
 
   /// Font variant NORMAL (default) or SMALL_CAPS.  Different set of font glyph
   /// lower case letters designed to have to fit within the font-height and
   /// weight of the corresponding lowercase letters.
   final String variant;
 
-  final LineHeight lineHeight;
+  final Dimen lineHeight;
 
   // TODO(terry): Size and computedLineHeight are in pixels.  Need to figure out
   //              how to handle in other units (specified in other units) like
@@ -1013,7 +1013,7 @@ class Font implements _StyleProperty {
       this.variant,
       this.lineHeight});
 
-  /// Merge the two fonts and return the result. See [Style.merge] for
+  /// Merge the two fonts and return the result. See [merge] for
   /// more information.
   factory Font.merge(Font a, Font b) {
     if (a == null) return b;
@@ -1041,12 +1041,12 @@ class Font implements _StyleProperty {
     if (weight != null) {
       // TODO(jacobr): is this really correct for lineHeight?
       if (lineHeight != null) {
-        return '$weight ${size}px/$lineHeightInPixels $_fontsAsString';
+        return '$weight ${size.size}${size.unit}/${lineHeight.size}${lineHeight.unit} $fontsAsString';
       }
-      return '$weight ${size}px $_fontsAsString';
+      return '$weight ${size.size}${size.unit} $fontsAsString';
     }
 
-    return '${size}px $_fontsAsString';
+    return '${size}px $fontsAsString';
   }
 
   Font scale(num ratio) => Font(
@@ -1056,29 +1056,10 @@ class Font implements _StyleProperty {
       style: style,
       variant: variant);
 
-  /// The lineHeight, provides an indirect means to specify the leading. The
-  /// leading is the difference between the font-size height and the (used)
-  /// value of line height in pixels.  If lineHeight is not specified it's
-  /// automatically computed as 1.2 of the font size.  Firefox is 1.2, Safari is
-  /// ~1.2, and CSS suggest a ration from 1 to 1.2 of the font-size when
-  /// computing line-height. The Font class constructor has the computation for
-  /// _lineHeight.
-  num get lineHeightInPixels {
-    if (lineHeight != null) {
-      if (lineHeight.inPixels) {
-        return lineHeight.height;
-      } else {
-        return (size != null) ? lineHeight.height * size : null;
-      }
-    } else {
-      return (size != null) ? size * 1.2 : null;
-    }
-  }
-
   @override
   int get hashCode {
     // TODO(jimhug): Lot's of potential collisions here. List of fonts, etc.
-    return size.toInt() % family[0].hashCode;
+    return size.size.hashCode % size.unit.hashCode % family[0].hashCode;
   }
 
   @override
@@ -1096,17 +1077,16 @@ class Font implements _StyleProperty {
   // TODO(terry): This is fragile should probably just iterate through the list
   //              of fonts construction the font-family string.
   /// Return fonts as a comma seperated list sans the square brackets.
-  String get _fontsAsString {
-    var fonts = family.toString();
-    return fonts.length > 2 ? fonts.substring(1, fonts.length - 1) : '';
+  String get fontsAsString {
+    return family == null ? '' : family.join(',');
   }
 }
 
 /// This class stores the sizes of the box edges in the CSS [box model][]. Each
 /// edge area is placed around the sides of the content box. The innermost area
-/// is the [Style.padding] area which has a background and surrounds the
-/// content.  The content and padding area is surrounded by the [Style.border],
-/// which itself is surrounded by the transparent [Style.margin]. This box
+/// is the [padding] area which has a background and surrounds the
+/// content.  The content and padding area is surrounded by the [border],
+/// which itself is surrounded by the transparent [margin]. This box
 /// represents the eges of padding, border, or margin depending on which
 /// accessor was used to retrieve it.
 ///
@@ -1171,7 +1151,7 @@ class BoxEdge {
     return make ? BoxEdge(left, top, right, bottom) : other;
   }
 
-  /// Merge the two box edge sizes and return the result. See [Style.merge] for
+  /// Merge the two box edge sizes and return the result. See [merge] for
   /// more information.
   factory BoxEdge.merge(BoxEdge x, BoxEdge y) {
     if (x == null) return y;

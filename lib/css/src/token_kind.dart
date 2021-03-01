@@ -120,25 +120,26 @@ class TokenKind {
   static const int UNIT_LENGTH_IN = 605;
   static const int UNIT_LENGTH_PT = 606;
   static const int UNIT_LENGTH_PC = 607;
-  static const int UNIT_ANGLE_DEG = 608;
-  static const int UNIT_ANGLE_RAD = 609;
-  static const int UNIT_ANGLE_GRAD = 610;
-  static const int UNIT_ANGLE_TURN = 611;
-  static const int UNIT_TIME_MS = 612;
-  static const int UNIT_TIME_S = 613;
-  static const int UNIT_FREQ_HZ = 614;
-  static const int UNIT_FREQ_KHZ = 615;
-  static const int UNIT_PERCENT = 616;
-  static const int UNIT_FRACTION = 617;
-  static const int UNIT_RESOLUTION_DPI = 618;
-  static const int UNIT_RESOLUTION_DPCM = 619;
-  static const int UNIT_RESOLUTION_DPPX = 620;
-  static const int UNIT_CH = 621; // Measure of "0" U+0030 glyph.
-  static const int UNIT_REM = 622; // computed value ‘font-size’ on root elem.
-  static const int UNIT_VIEWPORT_VW = 623;
-  static const int UNIT_VIEWPORT_VH = 624;
-  static const int UNIT_VIEWPORT_VMIN = 625;
-  static const int UNIT_VIEWPORT_VMAX = 626;
+  static const int UNIT_LENGTH_SP = 608;
+  static const int UNIT_ANGLE_DEG = 609;
+  static const int UNIT_ANGLE_RAD = 610;
+  static const int UNIT_ANGLE_GRAD = 611;
+  static const int UNIT_ANGLE_TURN = 612;
+  static const int UNIT_TIME_MS = 613;
+  static const int UNIT_TIME_S = 614;
+  static const int UNIT_FREQ_HZ = 615;
+  static const int UNIT_FREQ_KHZ = 616;
+  static const int UNIT_PERCENT = 617;
+  static const int UNIT_FRACTION = 618;
+  static const int UNIT_RESOLUTION_DPI = 619;
+  static const int UNIT_RESOLUTION_DPCM = 620;
+  static const int UNIT_RESOLUTION_DPPX = 621;
+  static const int UNIT_CH = 622; // Measure of "0" U+0030 glyph.
+  static const int UNIT_REM = 623; // computed value ‘font-size’ on root elem.
+  static const int UNIT_VIEWPORT_VW = 624;
+  static const int UNIT_VIEWPORT_VH = 625;
+  static const int UNIT_VIEWPORT_VMIN = 626;
+  static const int UNIT_VIEWPORT_VMAX = 627;
 
   // Directives (@nnnn)
   static const int DIRECTIVE_NONE = 640;
@@ -269,6 +270,7 @@ class TokenKind {
     {'unit': TokenKind.UNIT_LENGTH_IN, 'value': 'in'},
     {'unit': TokenKind.UNIT_LENGTH_PT, 'value': 'pt'},
     {'unit': TokenKind.UNIT_LENGTH_PC, 'value': 'pc'},
+    {'unit': TokenKind.UNIT_LENGTH_SP, 'value': 'sp'},
     {'unit': TokenKind.UNIT_ANGLE_DEG, 'value': 'deg'},
     {'unit': TokenKind.UNIT_ANGLE_RAD, 'value': 'rad'},
     {'unit': TokenKind.UNIT_ANGLE_GRAD, 'value': 'grad'},
@@ -698,6 +700,7 @@ class TokenKind {
       case TokenKind.UNIT_LENGTH_IN:
       case TokenKind.UNIT_LENGTH_PT:
       case TokenKind.UNIT_LENGTH_PC:
+      case TokenKind.UNIT_LENGTH_SP:
       case TokenKind.UNIT_ANGLE_DEG:
       case TokenKind.UNIT_ANGLE_RAD:
       case TokenKind.UNIT_ANGLE_GRAD:

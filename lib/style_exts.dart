@@ -1,66 +1,64 @@
-import 'dart:ui' as ui;
+part of megami;
 
-import 'package:flutter/gestures.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-
-import 'css/visitor.dart';
-import 'package:flutter/material.dart';
-
-import 'style.dart';
-import 'style_components.dart';
-
-extension StyleSheetExt on StyleSheet {
-  void resolve(SelectorSection selector) {
-    ruleSets.forEach((ruleSet) {
-      var matched = ruleSet.selectorGroup.match(selector);
-      matched.forEach((element) {
-        selector.matched[element] = ruleSet.declarationGroup;
+extension _StyleSheetExt on StyleSheet {
+  void resolve(_SelectorSection selector) {
+    var store = _SelectorSection.getComputedStyle(selector);
+    if (store == null) {
+      store = _SelectorSection.createComputedStyle(selector);
+      ruleSets.forEach((ruleSet) {
+        var matched = ruleSet.selectorGroup.selectors
+            .where((element) => element.match(selector));
+        matched.forEach((element) {
+          store.matched[element] = ruleSet.declarationGroup;
+        });
       });
-    });
-    selector.computeStyle.clear();
-    selector.computeStyle.addAll(merge(selector.matched.values.toList()));
+      var sortedEntries = store.matched.entries.toList();
+      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+      store.styles.clear();
+      store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
+    }
   }
 }
 
-extension SelectorGroupExt on SelectorGroup {
-  Iterable<Selector> match(SelectorSection selector) {
-    return selectors.where((element) {
-      return element.match(selector);
-    });
-  }
-}
-
-extension SelectorExt on Selector {
-  bool match(SelectorSection selector) {
+extension _SelectorExt on Selector {
+  bool match(_SelectorSection selector) {
     var strict = true;
     var matched = simpleSelectorSequences.reversed.fold(selector,
         (previousValue, element) {
-      var matched = element.match(previousValue);
-      var res = strict ? matched : matched ?? previousValue;
-      strict = element.isCombinatorGreater;
-      return res;
+      if (previousValue == null) return null;
+      strict = previousValue == selector ||
+          element.isCombinatorGreater ||
+          element.isCombinatorPlus;
+      var matched = element.match(previousValue, strict);
+      return matched;
     });
     return matched != null;
   }
+
+  int get weight => simpleSelectorSequences.fold(
+      0, (previousValue, element) => previousValue + element.weight);
 }
 
-extension SelectorSequenceExt on SimpleSelectorSequence {
-  SelectorSection match(SelectorSection selector) {
+extension _SelectorSequenceExt on SimpleSelectorSequence {
+  _SelectorSection match(_SelectorSection selector, bool strict) {
     var matched = selector?.sections
             ?.any((element) => simpleSelector.match(element, selector.index)) ??
         false;
-    if ((isCombinatorGreater || isCombinatorDescendant) && matched) {
-      return selector.parent;
+    if (matched) {
+      if (isCombinatorGreater || isCombinatorDescendant) return selector.parent;
+      if (isCombinatorPlus) return selector.index > 0 ? selector : null;
+      return selector;
+    } else if (!strict && selector.parent != null) {
+      return match(selector.parent, strict);
     }
-    if (isCombinatorPlus && matched) {
-      return selector.index > 0 ? selector : null;
-    }
-    return matched ? selector : null;
+    return null;
   }
+
+  int get weight =>
+      simpleSelector.weight + combinator - TokenKind.COMBINATOR_NONE;
 }
 
-extension SimpleSelectorExt on SimpleSelector {
+extension _SimpleSelectorExt on SimpleSelector {
   bool match(String selector, int index) {
     if (isWildcard) return true;
     switch (runtimeType) {
@@ -80,9 +78,28 @@ extension SimpleSelectorExt on SimpleSelector {
         return false;
     }
   }
+
+  int get weight {
+    switch (runtimeType) {
+      case IdSelector:
+        return 100;
+      case ClassSelector:
+        return 10;
+      case ElementSelector:
+        return 1;
+      case NamespaceSelector:
+        return 1;
+      case PseudoClassSelector:
+        return 1;
+      case PseudoClassFunctionSelector:
+        return 1;
+      default:
+        return 0;
+    }
+  }
 }
 
-extension PseudoClassSelectorExt on PseudoClassSelector {
+extension _PseudoClassSelectorExt on PseudoClassSelector {
   bool match(String selector, int index) {
     switch (name) {
       case 'first-child':
@@ -92,14 +109,17 @@ extension PseudoClassSelectorExt on PseudoClassSelector {
   }
 }
 
-extension PseudoClassFunctionSelectorExt on PseudoClassFunctionSelector {
+extension _PseudoClassFunctionSelectorExt on PseudoClassFunctionSelector {
   bool match(String selector, int index) {
     switch (name) {
       case 'nth-child':
         if (expression.expressions.isEmpty) {
           return false;
         } else {
-          return (expression.expressions.first as LiteralTerm).value ==
+          return expression.expressions
+                  .whereType<LiteralTerm>()
+                  .firstOrNull
+                  ?.value ==
               index + 1;
         }
     }
@@ -107,20 +127,26 @@ extension PseudoClassFunctionSelectorExt on PseudoClassFunctionSelector {
   }
 }
 
-extension ExpressionExt on Expression {
+extension _ExpressionExt on Expression {
   num get asNum {
     if (this is NumberTerm) {
       return (this as NumberTerm).value;
     }
+    if (this is PercentageTerm) {
+      return (this as PercentageTerm).value / 100.0;
+    }
+    if (this is UnitTerm) {
+      return (this as UnitTerm).value;
+    }
     return 0;
   }
 
-  int get asInt => asNum.toInt();
+  int get asInt => asNum.floor();
 
   double get asDouble => asNum.toDouble();
 }
 
-extension TextExt on Text {
+extension _TextExt on Text {
   Text copy({
     String data,
     TextStyle style,
@@ -153,7 +179,7 @@ extension TextExt on Text {
       );
 }
 
-extension TextFieldExt on TextField {
+extension _TextFieldExt on TextField {
   TextField copy(
           {TextEditingController controller,
           FocusNode focusNode,
@@ -264,14 +290,14 @@ extension TextFieldExt on TextField {
       );
 }
 
-Map<Type, StyleComponent> merge(List<DeclarationGroup> groups) {
-  return groups.fold(<Type, StyleComponent>{},
-      (Map<Type, StyleComponent> previousValue, group) {
-    group.declarations.map((e) => e as Declaration).forEach((declaration) {
-      var type = StyleComponent.typeOf(declaration);
+Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
+  return groups.fold(<Type, _StyleComponent>{},
+      (Map<Type, _StyleComponent> previousValue, group) {
+    group.declarations.whereType<Declaration>().forEach((declaration) {
+      var type = _StyleComponent.typeOf(declaration);
       if (type != null) {
         var component =
-            previousValue.putIfAbsent(type, () => StyleComponent.create(type));
+            previousValue.putIfAbsent(type, () => _StyleComponent.create(type));
         component.merge(declaration);
       }
     });
@@ -282,19 +308,99 @@ Map<Type, StyleComponent> merge(List<DeclarationGroup> groups) {
 extension StyleExt on Widget {
   Widget styled(dynamic selectors, {int index = 0}) {
     if (selectors is String) {
-      var section = SelectorSection(sections: [selectors], index: index);
-      return Style(
+      var section = _SelectorSection(sections: [selectors], index: index);
+      return _Style(
         selector: section,
         builder: (context) => this,
       );
     }
     if (selectors is List) {
-      var section = SelectorSection(sections: selectors, index: index);
-      return Style(
+      var section = _SelectorSection(sections: selectors, index: index);
+      return _Style(
         selector: section,
         builder: (context) => this,
       );
     }
     return this;
+  }
+}
+
+enum TextStyleType {
+  HEAD1,
+  HEAD2,
+  HEAD3,
+  HEAD4,
+  HEAD5,
+  HEAD6,
+  SUBTITLE1,
+  SUBTITLE2,
+  BODY1,
+  BODY2,
+  CAPTION,
+  BUTTON,
+  OVERLINE,
+}
+
+extension BuildContextExt on BuildContext {
+  Widget styledText(
+      dynamic selectors,
+      {int index = 0,
+      TextStyleType defaultStyleType = TextStyleType.BODY1,
+      @required
+          Widget Function(BuildContext context, TextStyle textStyle,
+                  TextAlign textAlign)
+              builder}) {
+    var defaultTextStyle = _textStyleFromType(defaultStyleType);
+    if (selectors is String) {
+      var section = _SelectorSection(sections: [selectors], index: index);
+      return _TextStyleWrapper(
+        selector: section,
+        defaultStyle: defaultTextStyle,
+        builder: builder,
+      );
+    }
+    if (selectors is List) {
+      var section = _SelectorSection(sections: selectors, index: index);
+      return _TextStyleWrapper(
+        selector: section,
+        defaultStyle: defaultTextStyle,
+        builder: builder,
+      );
+    }
+    return null;
+  }
+
+  TextStyle _textStyleFromType(TextStyleType type) {
+    var textTheme = Theme.of(this).textTheme;
+    switch (type) {
+      case TextStyleType.BODY1:
+        return textTheme.bodyText1;
+      case TextStyleType.BODY2:
+        return textTheme.bodyText2;
+      case TextStyleType.HEAD1:
+        return textTheme.headline1;
+      case TextStyleType.HEAD2:
+        return textTheme.headline2;
+      case TextStyleType.HEAD3:
+        return textTheme.headline3;
+      case TextStyleType.HEAD4:
+        return textTheme.headline4;
+      case TextStyleType.HEAD5:
+        return textTheme.headline5;
+      case TextStyleType.HEAD6:
+        return textTheme.headline6;
+      case TextStyleType.SUBTITLE1:
+        return textTheme.subtitle1;
+      case TextStyleType.SUBTITLE2:
+        return textTheme.subtitle2;
+      case TextStyleType.CAPTION:
+        return textTheme.caption;
+      case TextStyleType.BUTTON:
+        return textTheme.button;
+      case TextStyleType.OVERLINE:
+        return textTheme.overline;
+      default:
+        return textTheme.bodyText1;
+    }
   }
 }

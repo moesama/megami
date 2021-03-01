@@ -1294,7 +1294,8 @@ class LengthTerm extends UnitTerm {
         this.unit == TokenKind.UNIT_LENGTH_MM ||
         this.unit == TokenKind.UNIT_LENGTH_IN ||
         this.unit == TokenKind.UNIT_LENGTH_PT ||
-        this.unit == TokenKind.UNIT_LENGTH_PC);
+        this.unit == TokenKind.UNIT_LENGTH_PC ||
+        this.unit == TokenKind.UNIT_LENGTH_SP);
   }
 
   @override
@@ -1474,35 +1475,11 @@ class HexColorTerm extends LiteralTerm {
 
 class FunctionTerm extends LiteralTerm {
   final Expressions params;
-  final List<Expression> _resolvedParams = [];
 
   FunctionTerm(var value, String t, this.params, SourceSpan span)
       : super(value, t, span);
 
-  List<Expression> get resolvedParams {
-    if (_resolvedParams.isNotEmpty) return _resolvedParams;
-    var list = <Expression>[];
-    params.expressions.forEach((element) {
-      if (element is OperatorComma) {
-        _fromList(list);
-        list = <Expression>[];
-      } else {
-        list.add(element);
-      }
-    });
-    _fromList(list);
-    return _resolvedParams;
-  }
-
-  void _fromList(List<Expression> list) {
-    if (list.length == 1) {
-      _resolvedParams.add(list.first);
-    } else if (list.length > 1) {
-      var exps = Expressions(span);
-      exps.expressions.addAll(list);
-      _resolvedParams.add(exps);
-    }
-  }
+  List<Expression> get resolvedParams => params.resolvedExpressions;
 
   @override
   FunctionTerm clone() => FunctionTerm(value, text, params.clone(), span);
@@ -1541,11 +1518,37 @@ class ItemTerm extends NumberTerm {
 
 class Expressions extends Expression {
   final List<Expression> expressions = [];
+  final List<Expression> _resolvedExpressions = [];
 
   Expressions(SourceSpan span) : super(span);
 
+  List<Expression> get resolvedExpressions {
+    if (_resolvedExpressions.isNotEmpty) return _resolvedExpressions;
+    var list = <Expression>[];
+    expressions.forEach((element) {
+      if (element is OperatorComma) {
+        _fromList(list);
+        list = <Expression>[];
+      } else {
+        list.add(element);
+      }
+    });
+    _fromList(list);
+    return _resolvedExpressions;
+  }
+
   void add(Expression expression) {
     expressions.add(expression);
+  }
+
+  void _fromList(List<Expression> list) {
+    if (list.length == 1) {
+      _resolvedExpressions.add(list.first);
+    } else if (list.length > 1) {
+      var exps = Expressions(span);
+      exps.expressions.addAll(list);
+      _resolvedExpressions.add(exps);
+    }
   }
 
   @override
@@ -1636,14 +1639,14 @@ class FontExpression extends DartStyleExpression {
   // TODO(terry): Only px/pt for now need to handle all possible units to
   //              support calc expressions on units.
   FontExpression(SourceSpan span,
-      {Object /* LengthTerm | num */ size,
+      {Dimen size,
       List<String> family,
-      int weight,
-      String style,
+      FontWeight weight,
+      FontStyle style,
       String variant,
-      LineHeight lineHeight})
+      Dimen lineHeight})
       : font = Font(
-            size: size is LengthTerm ? size.value : size as num,
+            size: size,
             family: family,
             weight: weight,
             style: style,

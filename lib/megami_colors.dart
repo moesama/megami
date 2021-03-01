@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
+part of megami;
 
-import 'css/visitor.dart';
-
-class ColorHelper {
+class _ColorHelper {
   static Color fromHex(HexColorTerm term) => term.value;
 
   static Color fromExps(Expressions exps) {

@@ -1,11 +1,6 @@
-import 'dart:math';
+part of megami;
 
-import 'css/parser.dart';
-import 'css/visitor.dart';
-import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
-
-enum DimenUnit { PX, PT, SP, EM, PH, PV, VH, VW, VMIN, VMAX }
+enum DimenUnit { PX, PT, SP, EM, REM, PH, PV, VH, VW, VMIN, VMAX }
 
 enum DimenAxis { HORIZONTAL, VERTICAL }
 
@@ -14,6 +9,10 @@ class Dimen {
   final DimenUnit unit;
 
   const Dimen(this.size, this.unit);
+
+  const Dimen.zero()
+      : size = 0,
+        unit = DimenUnit.PT;
 
   static Dimen fromLength(LengthTerm term) {
     if (term == null) return null;
@@ -27,7 +26,7 @@ class Dimen {
 
   static Dimen fromRem(RemTerm term) {
     if (term == null) return null;
-    return Dimen(term.value, DimenUnit.EM);
+    return Dimen(term.value, DimenUnit.REM);
   }
 
   static Dimen fromViewport(ViewportTerm term) {
@@ -65,7 +64,8 @@ class Dimen {
     return Dimen(term.value, DimenUnit.EM);
   }
 
-  static Dimen fromPercent(PercentageTerm term, {DimenAxis axis = DimenAxis.HORIZONTAL}) {
+  static Dimen fromPercent(PercentageTerm term,
+      {DimenAxis axis = DimenAxis.HORIZONTAL}) {
     if (term == null) return null;
     switch (axis) {
       case DimenAxis.HORIZONTAL:
@@ -84,12 +84,16 @@ class Dimen {
     return null;
   }
 
+  static Dimen fromNum(NumberTerm term) {
+    return Dimen(term.value.toDouble(), DimenUnit.PT);
+  }
+
   static bool isDimen(Expression expression) =>
       expression is UnitTerm ||
       expression is PercentageTerm ||
       expression is EmTerm;
 
-  double dimension(BuildContext context) {
+  double dimension(BuildContext context, {double fontSize = 0.0}) {
     switch (unit) {
       case DimenUnit.PT:
         return size.toDouble();
@@ -98,29 +102,40 @@ class Dimen {
       case DimenUnit.SP:
         return size * Dimens.textScaleFactor;
       case DimenUnit.EM:
-        return size * Theme.of(context).textTheme.bodyText1.fontSize * Dimens.textScaleFactor;
+        var fs = fontSize;
+        if (fs == 0) fs = Theme.of(context).textTheme.bodyText1.fontSize;
+        return size * fs * Dimens.textScaleFactor;
+      case DimenUnit.REM:
+        var fs = Theme.of(context).textTheme.bodyText1.fontSize;
+        return size * fs * Dimens.textScaleFactor;
       case DimenUnit.PH:
         try {
           return size * (context.findRenderObject()?.paintBounds?.width ?? 0);
-        } catch (e) {}
-        return 0;
+        } catch (e) {
+          return 0;
+        }
+        break;
       case DimenUnit.PV:
         try {
           return size * (context.findRenderObject()?.paintBounds?.height ?? 0);
-        } catch (e) {}
-        return 0;
+        } catch (e) {
+          return 0;
+        }
+        break;
       case DimenUnit.VH:
-        return size * Dimens.screenHeight;
+        return size / 100 * Dimens.screenHeight;
       case DimenUnit.VW:
-        return size * Dimens.screenWidth;
+        return size / 100 * Dimens.screenWidth;
       case DimenUnit.VMIN:
-        return size * min(Dimens.screenWidth, Dimens.screenHeight);
+        return size / 100 * min(Dimens.screenWidth, Dimens.screenHeight);
       case DimenUnit.VMAX:
-        return size * max(Dimens.screenWidth, Dimens.screenHeight);
+        return size / 100 * max(Dimens.screenWidth, Dimens.screenHeight);
       default:
         return size.toDouble();
     }
   }
+
+  Dimen operator *(num scale) => Dimen(size * scale, unit);
 }
 
 class Dimens {
