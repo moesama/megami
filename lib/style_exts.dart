@@ -12,10 +12,27 @@ extension _StyleSheetExt on StyleSheet {
           store.matched[element] = ruleSet.declarationGroup;
         });
       });
-      var sortedEntries = store.matched.entries.toList();
+      var sortedEntries =
+          store.matched.entries.where((e) => !e.key.isElement).toList();
       sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
       store.styles.clear();
       store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
+      sortedEntries =
+          store.matched.entries.where((e) => e.key.isElement).toList();
+      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+      store.elementStyles.clear();
+      final elements = {
+        for (var e in sortedEntries)
+          e.key.simpleSelectorSequences.last.simpleSelector
+                  as PseudoElementSelector:
+              sortedEntries
+                  .where((element) => element.key == e.key)
+                  .map((e) => e.value)
+                  .toList()
+      };
+      elements.forEach((key, value) {
+        store.elementStyles[key] = _merge(value);
+      });
     }
   }
 }
@@ -34,6 +51,10 @@ extension _SelectorExt on Selector {
     });
     return matched != null;
   }
+
+  bool get isElement =>
+      simpleSelectorSequences.lastOrNull != null &&
+      simpleSelectorSequences.last.simpleSelector is PseudoElementSelector;
 
   int get weight => simpleSelectorSequences.fold(
       0, (previousValue, element) => previousValue + element.weight);
@@ -74,6 +95,14 @@ extension _SimpleSelectorExt on SimpleSelector {
         return (this as PseudoClassSelector).match(selector, index);
       case PseudoClassFunctionSelector:
         return (this as PseudoClassFunctionSelector).match(selector, index);
+      case PseudoElementSelector:
+        switch (name) {
+          case 'tab-control':
+          case 'tab-control-selected':
+          case 'tab-indicator':
+            return true;
+        }
+        return false;
       default:
         return false;
     }
@@ -287,6 +316,47 @@ extension _TextFieldExt on TextField {
       );
 }
 
+extension TabBarExt on TabBar {
+  TabBar copy({
+    List<Widget> tabs,
+    TabController controller,
+    bool isScrollable,
+    Color indicatorColor,
+    double indicatorWeight,
+    EdgeInsetsGeometry indicatorPadding,
+    Decoration indicator,
+    TabBarIndicatorSize indicatorSize,
+    Color labelColor,
+    TextStyle labelStyle,
+    EdgeInsetsGeometry labelPadding,
+    Color unselectedLabelColor,
+    TextStyle unselectedLabelStyle,
+    DragStartBehavior dragStartBehavior,
+    MouseCursor mouseCursor,
+    ValueChanged<int> onTap,
+    ScrollPhysics physics,
+  }) =>
+      TabBar(
+        tabs: tabs ?? this.tabs,
+        controller: controller ?? this.controller,
+        isScrollable: isScrollable ?? this.isScrollable,
+        indicatorColor: indicatorColor ?? this.indicatorColor,
+        indicatorWeight: indicatorWeight ?? this.indicatorWeight,
+        indicatorPadding: indicatorPadding ?? this.indicatorPadding,
+        indicator: indicator ?? this.indicator,
+        indicatorSize: indicatorSize ?? this.indicatorSize,
+        labelColor: labelColor ?? this.labelColor,
+        labelStyle: labelStyle ?? this.labelStyle,
+        labelPadding: labelPadding ?? this.labelPadding,
+        unselectedLabelColor: unselectedLabelColor ?? this.unselectedLabelColor,
+        unselectedLabelStyle: unselectedLabelStyle ?? this.unselectedLabelStyle,
+        dragStartBehavior: dragStartBehavior ?? this.dragStartBehavior,
+        mouseCursor: mouseCursor ?? this.mouseCursor,
+        onTap: onTap ?? this.onTap,
+        physics: physics ?? this.physics,
+      );
+}
+
 Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
   return groups.fold(<Type, _StyleComponent>{},
       (Map<Type, _StyleComponent> previousValue, group) {
@@ -303,20 +373,32 @@ Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
 }
 
 extension StyleExt on Widget {
-  Widget styled(dynamic selectors, {int index = 0}) {
+  Widget styled(dynamic selectors, {int index = -1}) {
     if (selectors is String) {
       var section = _SelectorSection(sections: [selectors], index: index);
-      return _Style(
-        selector: section,
-        builder: (context) => this,
-      );
+      return this is PreferredSizeWidget
+          ? _PreferredSizeStyle(
+              sizeProvider: () => (this as PreferredSizeWidget).preferredSize,
+              selector: section,
+              builder: (context) => this,
+            )
+          : _Style(
+              selector: section,
+              builder: (context) => this,
+            );
     }
     if (selectors is List) {
       var section = _SelectorSection(sections: selectors, index: index);
-      return _Style(
-        selector: section,
-        builder: (context) => this,
-      );
+      return this is PreferredSizeWidget
+          ? _PreferredSizeStyle(
+              sizeProvider: () => (this as PreferredSizeWidget).preferredSize,
+              selector: section,
+              builder: (context) => this,
+            )
+          : _Style(
+              selector: section,
+              builder: (context) => this,
+            );
     }
     return this;
   }
@@ -406,6 +488,11 @@ extension IterableExt<E> on Iterable<E> {
   E get firstOrNull {
     if (isEmpty) return null;
     return first;
+  }
+
+  E get lastOrNull {
+    if (isEmpty) return null;
+    return last;
   }
 
   E firstWhereOrNull(bool Function(E element) test) {

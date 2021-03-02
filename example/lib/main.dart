@@ -15,12 +15,13 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  List<String> buttonSelectors = [".button"];
+class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
+  TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     styleCubit.setCss("asset://assets/style.css");
   }
 
@@ -35,6 +36,27 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: StyledScaffold(builder: (context) {
         return Scaffold(
+          // appBar: AppBar(
+          //   backgroundColor: Colors.transparent,
+          //   elevation: 0,
+          //   bottom: TabBar(
+          //     tabs: [
+          //       Row(
+          //         mainAxisAlignment: MainAxisAlignment.center,
+          //         children: [
+          //           Image.asset(
+          //             'assets/images/banner.jpg',
+          //             width: 16,
+          //             height: 16,
+          //           ),
+          //           Text('11111'),
+          //         ],
+          //       ),
+          //       Tab(text: '2222')
+          //     ],
+          //     controller: _tabController,
+          //   ).styled('.app-tab'),
+          // ).styled('.app-bar'),
           body: CustomScrollView(
             slivers: [
               SliverAppBar(
@@ -50,7 +72,7 @@ class _MyAppState extends State<MyApp> {
                 flexibleSpace: FlexibleSpaceBar(
                   background: Stack(
                     children: [
-                    Container().styled('.banner').styled('.banner-wrap'),
+                      Container().styled('.banner').styled('.banner-wrap'),
                       OverflowBox(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,

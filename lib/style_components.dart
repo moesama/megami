@@ -50,6 +50,10 @@ abstract class _StyleComponent<T> {
       case 'border-left-width':
         return _BorderComponent;
       case 'border-radius':
+      case 'border-top-left-radius':
+      case 'border-top-right-radius':
+      case 'border-bottom-right-radius':
+      case 'border-bottom-left-radius':
         return _BorderRadiusComponent;
       case 'border-image':
       case 'border-image-source':
@@ -136,7 +140,7 @@ abstract class _StyleComponent<T> {
 
   static Widget decorate(BuildContext context, Widget widget,
       {Iterable<_StyleComponent> components}) {
-    if (components == null) {
+    if (components == null || components.isEmpty) {
       return widget;
     }
 
@@ -460,12 +464,92 @@ abstract class _StyleComponent<T> {
     return wrapper.builder(context, textStyle, textAlign);
   }
 
-  static TextStyle _merge(BuildContext context, TextStyle origin,
+  static TabBar decorateTabIndicator(BuildContext context, TabBar tabBar,
       {Iterable<_StyleComponent> components}) {
+    if (components == null || components.isEmpty) {
+      return tabBar;
+    }
+    final padding =
+        components.whereType<_PaddingComponent>().firstOrNull?.build(context);
+    final background = components
+            .whereType<_BorderImageComponent>()
+            .firstOrNull
+            ?.build(context) ??
+        components
+            .whereType<_BackgroundComponent>()
+            .firstOrNull
+            ?.build(context);
+    final bgBlendMode = components
+        .whereType<_BackgroundBlendModeComponent>()
+        .firstOrNull
+        ?.build(context);
+    final border =
+        components.whereType<_BorderComponent>().firstOrNull?.build(context);
+    final borderUniform = border?.isUniform ?? true;
+    final borderRadius = components
+        .whereType<_BorderRadiusComponent>()
+        .firstOrNull
+        ?.build(context);
+    final boxShadow =
+        components.whereType<_BoxShadowComponent>().firstOrNull?.build(context);
+
+    if (background != null ||
+        border != null ||
+        (boxShadow != null && !boxShadow.inset)) {
+      return tabBar.copy(
+          indicator: PaddingBoxDecoration(
+        color: background?.color,
+        image: background?.image,
+        gradient: background?.gradient,
+        border: border,
+        borderRadius: borderUniform ? borderRadius : null,
+        backgroundBlendMode: bgBlendMode,
+        boxShadow: boxShadow != null && !boxShadow.inset
+            ? [
+                boxShadow.shadow(context),
+              ]
+            : [],
+        insets: padding,
+      ));
+    }
+    return tabBar;
+  }
+
+  static TabBar decorateTabControl(BuildContext context, TabBar tabBar,
+      {Iterable<_StyleComponent> components, bool selected = false}) {
+    if (components == null || components.isEmpty) {
+      return tabBar;
+    }
+    final padding =
+        components.whereType<_PaddingComponent>().firstOrNull?.build(context);
+    final origin = Theme.of(context).textTheme.bodyText1;
     var textColor = components
         ?.whereType<_TextColorComponent>()
         ?.firstOrNull
         ?.build(context);
+    final textStyle =
+        _merge(context, origin, components: components, excludeColor: true);
+    return selected
+        ? tabBar.copy(
+            labelStyle: textStyle,
+            labelColor: textColor,
+            labelPadding: padding,
+          )
+        : tabBar.copy(
+            unselectedLabelStyle: textStyle,
+            unselectedLabelColor: textColor,
+            labelPadding: padding,
+          );
+  }
+
+  static TextStyle _merge(BuildContext context, TextStyle origin,
+      {Iterable<_StyleComponent> components, bool excludeColor = false}) {
+    var textColor = excludeColor
+        ? null
+        : components
+            ?.whereType<_TextColorComponent>()
+            ?.firstOrNull
+            ?.build(context);
     var font =
         components?.whereType<_FontComponent>()?.firstOrNull?.build(context);
     var fontWeight = font?.font?.weight ?? origin.fontWeight;
@@ -681,14 +765,12 @@ class _MarginComponent extends _StyleComponent<EdgeInsets> {
   }
 
   @override
-  EdgeInsets build(BuildContext context) {
-    return EdgeInsets.only(
-      top: _margin.top != null ? _margin.top.dimension(context) : 0,
-      right: _margin.right != null ? _margin.right.dimension(context) : 0,
-      bottom: _margin.bottom != null ? _margin.bottom.dimension(context) : 0,
-      left: _margin.left != null ? _margin.left.dimension(context) : 0,
-    );
-  }
+  EdgeInsets build(BuildContext context) => EdgeInsets.only(
+        top: _margin.top != null ? _margin.top.dimension(context) : 0,
+        right: _margin.right != null ? _margin.right.dimension(context) : 0,
+        bottom: _margin.bottom != null ? _margin.bottom.dimension(context) : 0,
+        left: _margin.left != null ? _margin.left.dimension(context) : 0,
+      );
 }
 
 class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
@@ -871,25 +953,24 @@ class _BorderComponent extends _StyleComponent<Border> {
   }
 
   @override
-  Border build(BuildContext context) {
-    return Border(
-      top: _width.top != null
-          ? BorderSide(color: _color.top, width: _width.top.dimension(context))
-          : BorderSide.none,
-      right: _width.right != null
-          ? BorderSide(
-              color: _color.right, width: _width.right.dimension(context))
-          : BorderSide.none,
-      bottom: _width.bottom != null
-          ? BorderSide(
-              color: _color.bottom, width: _width.bottom.dimension(context))
-          : BorderSide.none,
-      left: _width.left != null
-          ? BorderSide(
-              color: _color.left, width: _width.left.dimension(context))
-          : BorderSide.none,
-    );
-  }
+  Border build(BuildContext context) => Border(
+        top: _width.top != null
+            ? BorderSide(
+                color: _color.top, width: _width.top.dimension(context))
+            : BorderSide.none,
+        right: _width.right != null
+            ? BorderSide(
+                color: _color.right, width: _width.right.dimension(context))
+            : BorderSide.none,
+        bottom: _width.bottom != null
+            ? BorderSide(
+                color: _color.bottom, width: _width.bottom.dimension(context))
+            : BorderSide.none,
+        left: _width.left != null
+            ? BorderSide(
+                color: _color.left, width: _width.left.dimension(context))
+            : BorderSide.none,
+      );
 }
 
 class _BorderRadiusComponent extends _StyleComponent<BorderRadiusGeometry> {
@@ -900,27 +981,119 @@ class _BorderRadiusComponent extends _StyleComponent<BorderRadiusGeometry> {
   void merge(Declaration declaration) {
     var exps = (declaration.expression).expressions;
     var indexOfOp = exps.indexWhere((element) => element is OperatorSlash);
-    List<LiteralTerm> sizesX;
-    List<LiteralTerm> sizesY;
-    if (indexOfOp < 0) {
-      sizesX = sizesY = exps
-          .where((e) => Dimen.isDimen(e))
-          .map((e) => e as LiteralTerm)
-          .toList();
-    } else {
-      sizesX = exps
-          .sublist(0, indexOfOp)
-          .where((e) => Dimen.isDimen(e))
-          .map((e) => e as LiteralTerm)
-          .toList();
-      sizesY = exps
-          .sublist(indexOfOp + 1)
-          .where((e) => Dimen.isDimen(e))
-          .map((e) => e as LiteralTerm)
-          .toList();
+    switch (declaration.property) {
+      case 'border-radius':
+        List<LiteralTerm> sizesX;
+        List<LiteralTerm> sizesY;
+        if (indexOfOp < 0) {
+          sizesX = sizesY = exps
+              .where((e) => Dimen.isDimen(e))
+              .map((e) => e as LiteralTerm)
+              .toList();
+        } else {
+          sizesX = exps
+              .sublist(0, indexOfOp)
+              .where((e) => Dimen.isDimen(e))
+              .map((e) => e as LiteralTerm)
+              .toList();
+          sizesY = exps
+              .sublist(indexOfOp + 1)
+              .where((e) => Dimen.isDimen(e))
+              .map((e) => e as LiteralTerm)
+              .toList();
+        }
+        _radiusX.fill(sizesX.map((e) => Dimen.fromLiteral(e)).toList());
+        _radiusY.fill(sizesY.map((e) => Dimen.fromLiteral(e)).toList());
+        break;
+      case 'border-top-left-radius':
+        if (indexOfOp < 0) {
+          final r = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          if (r != null) {
+            _radiusX.top = _radiusY.top = Dimen.fromLiteral(r);
+          }
+        } else {
+          final rX = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          _radiusX.top = Dimen.fromLiteral(rX);
+          final rY = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          _radiusY.top = Dimen.fromLiteral(rY);
+        }
+        break;
+      case 'border-top-right-radius':
+        if (indexOfOp < 0) {
+          final r = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          if (r != null) {
+            _radiusX.right = _radiusY.right = Dimen.fromLiteral(r);
+          }
+        } else {
+          final rX = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          _radiusX.right = Dimen.fromLiteral(rX);
+          final rY = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          _radiusY.right = Dimen.fromLiteral(rY);
+        }
+        break;
+      case 'border-bottom-right-radius':
+        if (indexOfOp < 0) {
+          final r = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          if (r != null) {
+            _radiusX.bottom = _radiusY.bottom = Dimen.fromLiteral(r);
+          }
+        } else {
+          final rX = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          _radiusX.bottom = Dimen.fromLiteral(rX);
+          final rY = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          _radiusY.bottom = Dimen.fromLiteral(rY);
+        }
+        break;
+      case 'border-bottom-left-radius':
+        if (indexOfOp < 0) {
+          final r = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          if (r != null) {
+            _radiusX.left = _radiusY.left = Dimen.fromLiteral(r);
+          }
+        } else {
+          final rX = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          _radiusX.left = Dimen.fromLiteral(rX);
+          final rY = exps
+              .whereType<LiteralTerm>()
+              .where((e) => Dimen.isDimen(e))
+              .firstOrNull;
+          _radiusY.left = Dimen.fromLiteral(rY);
+        }
+        break;
     }
-    _radiusX.fill(sizesX.map((e) => Dimen.fromLiteral(e)).toList());
-    _radiusY.fill(sizesY.map((e) => Dimen.fromLiteral(e)).toList());
   }
 
   @override
@@ -1039,16 +1212,14 @@ class _BoxShadowComponent extends _StyleComponent<_ShadowCompose> {
   }
 
   @override
-  _ShadowCompose build(BuildContext context) {
-    return _ShadowCompose(
-      color: _color,
-      offsetX: _offsetX,
-      offsetY: _offsetY,
-      blur: _blur,
-      spread: _spread,
-      inset: _inset,
-    );
-  }
+  _ShadowCompose build(BuildContext context) => _ShadowCompose(
+        color: _color,
+        offsetX: _offsetX,
+        offsetY: _offsetY,
+        blur: _blur,
+        spread: _spread,
+        inset: _inset,
+      );
 }
 
 class _OpacityComponent extends _StyleComponent<double> {
@@ -1064,9 +1235,7 @@ class _OpacityComponent extends _StyleComponent<double> {
   }
 
   @override
-  double build(BuildContext context) {
-    return _opacity;
-  }
+  double build(BuildContext context) => _opacity;
 }
 
 class _FilterComponent extends _StyleComponent<_FilterCompose> {
@@ -1211,9 +1380,7 @@ class _TextColorComponent extends _StyleComponent<Color> {
   }
 
   @override
-  Color build(BuildContext context) {
-    return _color;
-  }
+  Color build(BuildContext context) => _color;
 }
 
 class _TextAlignComponent extends _StyleComponent<TextAlign> {
@@ -1225,9 +1392,7 @@ class _TextAlignComponent extends _StyleComponent<TextAlign> {
   }
 
   @override
-  TextAlign build(BuildContext context) {
-    return _alignment;
-  }
+  TextAlign build(BuildContext context) => _alignment;
 }
 
 class _FontComponent extends _StyleComponent<FontExpression> {
@@ -1241,9 +1406,7 @@ class _FontComponent extends _StyleComponent<FontExpression> {
   }
 
   @override
-  FontExpression build(BuildContext context) {
-    return _font;
-  }
+  FontExpression build(BuildContext context) => _font;
 }
 
 class _TransitionComponent

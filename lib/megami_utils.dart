@@ -142,8 +142,10 @@ class _GradientHelper {
         if (dir is AngleTerm) {
           transform = _GradientTransformHelper.from(dir);
         } else if (dir is Expressions && dir.expressions.isNotEmpty) {
-          var begin = dir.expressions.first;
-          if (begin is LiteralTerm && begin.value == 'to') {
+          var begin = dir.expressions.firstOrNull;
+          if (begin != null &&
+              begin is LiteralTerm &&
+              begin.value.toString() == 'to') {
             endAlignment = _AlignmentHelper.fromExp(dir);
           }
         } else {

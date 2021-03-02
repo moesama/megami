@@ -60,13 +60,11 @@ class _AnimatedDecorationBoxState
   }
 
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
+  Widget build(BuildContext context) => DecoratedBox(
       child: widget.child,
       decoration: _decoration?.evaluate(animation),
       position: widget.position,
     );
-  }
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder description) {
@@ -132,12 +130,10 @@ class _AnimatedInnerShadowState
   }
 
   @override
-  Widget build(BuildContext context) {
-    return InnerShadow(
+  Widget build(BuildContext context) => InnerShadow(
       child: widget.child,
       boxShadow: _boxShadow?.evaluate(animation),
     );
-  }
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder description) {
@@ -205,12 +201,10 @@ class _AnimatedConstrainedBoxState
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
+  Widget build(BuildContext context) => ConstrainedBox(
       child: widget.child,
       constraints: _constraints?.evaluate(animation),
     );
-  }
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder description) {
@@ -287,15 +281,13 @@ class _AnimatedTransformState
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Transform(
+  Widget build(BuildContext context) => Transform(
       child: widget.child,
       transform: _transform?.evaluate(animation),
       alignment: _alignment?.evaluate(animation),
       origin: widget.origin,
       transformHitTests: widget.transformHitTests,
     );
-  }
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder description) {
@@ -361,14 +353,12 @@ class _AnimatedClipRRectState
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
+  Widget build(BuildContext context) => ClipRRect(
       child: widget.child,
       clipper: widget.clipper,
       clipBehavior: widget.clipBehavior,
       borderRadius: _borderRadius.evaluate(animation),
     );
-  }
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder description) {
@@ -425,15 +415,13 @@ class _AnimatedBackgroundBlurState
   }
 
   @override
-  Widget build(BuildContext context) {
-    return BackdropFilter(
+  Widget build(BuildContext context) => BackdropFilter(
       filter: ui.ImageFilter.blur(
         sigmaX: _sigma.evaluate(animation),
         sigmaY: _sigma.evaluate(animation),
       ),
       child: widget.child,
     );
-  }
 }
 
 class _AnimatedText extends ImplicitlyAnimatedWidget {

@@ -15,7 +15,8 @@ class StyledScaffold extends StatelessWidget {
     return BlocProvider<StyleCubit>(
       create: (BuildContext context) => cubit,
       child: BlocBuilder<StyleCubit, StyleSheet>(
-        builder: (context, state) => state == null ? Container() : builder.call(context),
+        builder: (context, state) =>
+            state == null ? Container() : builder.call(context),
       ),
     );
   }
@@ -24,6 +25,14 @@ class StyledScaffold extends StatelessWidget {
 class _ComputedStyle {
   final Map<Selector, DeclarationGroup> matched = {};
   final Map<Type, _StyleComponent> styles = {};
+  final Map<PseudoElementSelector, Map<Type, _StyleComponent>> elementStyles =
+      {};
+
+  List<_StyleComponent> getComponentsByElements(List<String> elements) =>
+      elementStyles.entries
+          .where((e) => elements.contains(e.key.name.trim()))
+          .map((e) => e.value.values)
+          .expand((e) => e).toList();
 }
 
 class _SelectorSection {
@@ -36,11 +45,13 @@ class _SelectorSection {
   static final Map<_SelectorSection, _ComputedStyle> store = {};
 
   static _ComputedStyle getComputedStyle(_SelectorSection selector) =>
-      store.entries.firstWhereOrNull((element) => element.key == selector)?.value;
+      store.entries
+          .firstWhereOrNull((element) => element.key == selector)
+          ?.value;
 
   static _ComputedStyle createComputedStyle(_SelectorSection selector) {
     // use private style store if index is not 0
-    if (selector.index != 0) {
+    if (selector.index >= 0) {
       selector._privateStyle = _ComputedStyle();
       return selector._privateStyle;
     }
@@ -85,9 +96,23 @@ class _Style extends StatelessWidget {
   }
 
   Widget _applyStyle(
-          BuildContext context, StyleSheet stylesheet, Widget child) =>
-      _StyleComponent.decorate(context, child,
-          components: selector.computeStyle?.styles?.values);
+      BuildContext context, StyleSheet stylesheet, Widget child) {
+    var res = child;
+    if (child is TabBar) {
+      res = _StyleComponent.decorateTabIndicator(context, res,
+          components: selector.computeStyle
+              ?.getComponentsByElements(['tab-indicator']));
+      res = _StyleComponent.decorateTabControl(context, res,
+          components:
+              selector.computeStyle?.getComponentsByElements(['tab-control']));
+      res = _StyleComponent.decorateTabControl(context, res,
+          selected: true,
+          components: selector.computeStyle
+              ?.getComponentsByElements(['tab-control-selected']));
+    }
+    return _StyleComponent.decorate(context, res,
+        components: selector.computeStyle?.styles?.values);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +129,20 @@ class _Style extends StatelessWidget {
   }
 }
 
+class _PreferredSizeStyle extends _Style implements PreferredSizeWidget {
+  final Size Function() sizeProvider;
+
+  _PreferredSizeStyle({
+    Key key,
+    @required this.sizeProvider,
+    WidgetBuilder builder,
+    _SelectorSection selector,
+  }) : super(key: key, builder: builder, selector: selector);
+
+  @override
+  Size get preferredSize => sizeProvider();
+}
+
 class _TextStyleWrapper extends StatelessWidget {
   final Widget Function(
       BuildContext context, TextStyle textStyle, TextAlign textAlign) builder;
@@ -114,13 +153,9 @@ class _TextStyleWrapper extends StatelessWidget {
       : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return _Style(
-      selector: selector,
-      builder: (context) {
-        return _StyleComponent.decorateText(context, this,
-            components: selector.computeStyle?.styles?.values);
-      },
-    );
-  }
+  Widget build(BuildContext context) => _Style(
+        selector: selector,
+        builder: (context) => _StyleComponent.decorateText(context, this,
+            components: selector.computeStyle?.styles?.values),
+      );
 }

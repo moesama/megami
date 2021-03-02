@@ -24,3 +24,5 @@ part 'style_components.dart';
 part 'style_cubit.dart';
 part 'style_exts.dart';
 part 'style_animate.dart';
+
+part 'padding_box_decoration.dart';

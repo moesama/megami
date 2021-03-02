@@ -13,4 +13,8 @@
 .album:first-child { margin-left: 20pt; }
 .album-cover { width: 27vw; height: 27vw; margin-bottom: 15pt; background-image: url(asset://assets/images/banner.jpg); background-size: cover; border-radius: 8pt; }
 .album-title, .album-author { margin-bottom: 4pt; text-align: start; }
-.song { background-image: url(asset://assets/images/banner.jpg); background-size: cover; border-radius: 15pt; }
+.song { background-image: linear-gradient(to right, red, rgb(255, 255, 0)); background-size: cover; border-radius: 15pt; }
+.app-tab::tab-indicator { background-color: white; padding: 5pt 10pt; border-radius: 25pt; }
+.app-tab::tab-control { color: white; }
+.app-tab::tab-control-selected { color: blue; }
+.app-bar { border-radius: 0pt 0pt 25pt 25pt; background-color: blue; overflow: hidden; box-shadow: 0pt 5pt 6pt rgba(0, 0, 0, 0.2); }

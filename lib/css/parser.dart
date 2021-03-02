@@ -2517,7 +2517,7 @@ class _Parser {
   HexColorTerm processCssColor(Identifier func) {
     var start = _peekToken.span;
     var name = func.name;
-    if (name == 'rgba' || name == 'rgba') {
+    if (name == 'rgba' || name == 'rgb') {
       var params = processCalcExpression();
       var cssColor = CssColor.css('${func.name}(${params})');
       return HexColorTerm(
