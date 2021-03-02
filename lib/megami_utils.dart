@@ -522,8 +522,12 @@ class _CurveHelper {
         case 'ease-in-out':
           return Curves.easeInOut;
       }
-    } else if (expression is FunctionTerm && expression.value == 'cubic-bezier') {
-      final params = expression.resolvedParams.whereType<NumberTerm>().map((e) => e.asDouble).toList();
+    } else if (expression is FunctionTerm &&
+        expression.value == 'cubic-bezier') {
+      final params = expression.resolvedParams
+          .whereType<NumberTerm>()
+          .map((e) => e.asDouble)
+          .toList();
       if (params.length == 4) {
         return Cubic(params[0], params[1], params[2], params[3]);
       }
@@ -631,9 +635,9 @@ class _RenderDropShadow extends RenderProxyBox {
       final shadowPaint = Paint()
         ..colorFilter = ColorFilter.mode(shadow.color, BlendMode.srcIn)
         ..imageFilter = ui.ImageFilter.blur(
-            tileMode: TileMode.decal,
-            sigmaX: shadow.blurSigma,
-            sigmaY: shadow.blurSigma);
+          sigmaX: shadow.blurSigma,
+          sigmaY: shadow.blurSigma,
+        );
       final scaleX = (child.paintBounds.width + shadow.spreadRadius * 2) /
           child.paintBounds.width;
       final scaleY = (child.paintBounds.height + shadow.spreadRadius * 2) /

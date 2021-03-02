@@ -207,7 +207,6 @@ extension _TextFieldExt on TextField {
           bool expands = false,
           int maxLength,
           bool maxLengthEnforced = true,
-          MaxLengthEnforcement maxLengthEnforcement,
           void Function(String) onChanged,
           void Function() onEditingComplete,
           void Function(String) onSubmitted,
@@ -261,7 +260,6 @@ extension _TextFieldExt on TextField {
         expands: expands ?? this.expands,
         maxLength: maxLength ?? this.maxLength,
         maxLengthEnforced: maxLengthEnforced ?? this.maxLengthEnforced,
-        maxLengthEnforcement: maxLengthEnforcement ?? this.maxLengthEnforcement,
         onChanged: onChanged ?? this.onChanged,
         onEditingComplete: onEditingComplete ?? this.onEditingComplete,
         onSubmitted: onSubmitted ?? this.onSubmitted,
@@ -279,7 +277,6 @@ extension _TextFieldExt on TextField {
         dragStartBehavior: dragStartBehavior ?? this.dragStartBehavior,
         enableInteractiveSelection:
             enableInteractiveSelection ?? this.enableInteractiveSelection,
-        selectionControls: selectionControls ?? this.selectionControls,
         onTap: onTap ?? this.onTap,
         mouseCursor: mouseCursor ?? this.mouseCursor,
         buildCounter: buildCounter ?? this.buildCounter,
@@ -402,5 +399,19 @@ extension BuildContextExt on BuildContext {
       default:
         return textTheme.bodyText1;
     }
+  }
+}
+
+extension IterableExt<E> on Iterable<E> {
+  E get firstOrNull {
+    if (isEmpty) return null;
+    return first;
+  }
+
+  E firstWhereOrNull(bool Function(E element) test) {
+    for (var element in this) {
+      if (test(element)) return element;
+    }
+    return null;
   }
 }

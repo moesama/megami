@@ -195,7 +195,8 @@ abstract class _StyleComponent<T> {
       }
     }
 
-    final align = components.whereType<_AlignComponent>().firstOrNull?.build(context);
+    final align =
+        components.whereType<_AlignComponent>().firstOrNull?.build(context);
     if (align != null) {
       res = Align(
         child: res,
@@ -229,9 +230,9 @@ abstract class _StyleComponent<T> {
         transitions[_TransitionCompose.decoration] ?? allTransition;
 
     final overflowHidden = components
-        .whereType<_OverFlowComponent>()
-        .firstOrNull
-        ?.build(context) ??
+            .whereType<_OverFlowComponent>()
+            .firstOrNull
+            ?.build(context) ??
         false;
     if (overflowHidden && (borderUniform || borderRadius == null)) {
       if (decorationTransition != null) {
@@ -1175,7 +1176,7 @@ class _FilterComponent extends _StyleComponent<_FilterCompose> {
             ? ui.ImageFilter.blur(
                 sigmaX: _blurRadius.dimension(context),
                 sigmaY: _blurRadius.dimension(context),
-                tileMode: TileMode.decal)
+              )
             : null,
         opacity: _opacity,
       );
@@ -1428,7 +1429,8 @@ class _TransformComponent extends _StyleComponent<_TransformCompose> {
         break;
       case 'scale3d':
         if (params.length == 3) {
-          _matrix = Matrix4.diagonal3Values(max(params[0], 0.000001), max(params[1], 0.000001), max(params[2], 0.000001));
+          _matrix = Matrix4.diagonal3Values(max(params[0], 0.000001),
+              max(params[1], 0.000001), max(params[2], 0.000001));
         }
         break;
       case 'scaleX':
