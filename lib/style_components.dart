@@ -201,11 +201,22 @@ abstract class _StyleComponent<T> {
 
     final align =
         components.whereType<_AlignComponent>().firstOrNull?.build(context);
+    final alignTransition =
+        transitions[_TransitionCompose.align] ?? allTransition;
     if (align != null) {
-      res = Align(
-        child: res,
-        alignment: align,
-      );
+      if (alignTransition != null) {
+        res = AnimatedAlign(
+          child: res,
+          alignment: align,
+          duration: alignTransition.duration,
+          curve: alignTransition.curve,
+        );
+      } else {
+        res = Align(
+          child: res,
+          alignment: align,
+        );
+      }
     }
 
     final background = components
@@ -444,10 +455,19 @@ abstract class _StyleComponent<T> {
     }
 
     if (align != null && !(res is Align)) {
-      res = Align(
-        child: res,
-        alignment: align,
-      );
+      if (alignTransition != null) {
+        res = AnimatedAlign(
+          child: res,
+          alignment: align,
+          duration: alignTransition.duration,
+          curve: alignTransition.curve,
+        );
+      } else {
+        res = Align(
+          child: res,
+          alignment: align,
+        );
+      }
     }
 
     return res;
@@ -624,6 +644,7 @@ class _TransitionCompose {
   static final blurFilter = 'blur-filter';
   static final dropShadow = 'drop-shadow';
   static final transform = 'transform';
+  static final align = 'align';
   static final color = 'color';
   static final textAlign = 'text-align';
 
