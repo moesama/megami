@@ -873,19 +873,7 @@ class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
   _BackgroundCompose build(BuildContext context) {
     DecorationImage image;
     if (_uri != null) {
-      ImageProvider provider;
-      switch (_uri.scheme) {
-        case 'http':
-        case 'https':
-          provider = NetworkImage(_uri.toString());
-          break;
-        case 'file':
-          provider = FileImage(File(_uri.toFilePath()));
-          break;
-        case 'asset':
-          provider = AssetImage(_uri.toString().substring(8));
-          break;
-      }
+      final provider = _uri.toImage();
       if (provider != null) {
         image = DecorationImage(
             image: provider, fit: _fit, repeat: _repeat, alignment: _alignment);
@@ -1164,19 +1152,7 @@ class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
   _BackgroundCompose build(BuildContext context) {
     DecorationImage image;
     if (_uri != null) {
-      ImageProvider provider;
-      switch (_uri.scheme) {
-        case 'http':
-        case 'https':
-          provider = NetworkImage(_uri.toString());
-          break;
-        case 'file':
-          provider = FileImage(File(_uri.toFilePath()));
-          break;
-        case 'asset':
-          provider = AssetImage(_uri.path);
-          break;
-      }
+      final provider = _uri.toImage();
       if (provider != null) {
         image = DecorationImage(
           image: provider,

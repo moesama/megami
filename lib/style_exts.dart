@@ -502,3 +502,34 @@ extension IterableExt<E> on Iterable<E> {
     return null;
   }
 }
+
+extension UriExt on Uri {
+  ImageProvider toImage() {
+    ImageProvider provider;
+    switch (scheme) {
+      case 'http':
+      case 'https':
+        if (path.toLowerCase().endsWith('.svg')) {
+          provider = Svg.network(toString());
+        } else {
+          provider = NetworkImage(toString());
+        }
+        break;
+      case 'file':
+        if (path.toLowerCase().endsWith('.svg')) {
+          provider = Svg.file(toFilePath());
+        } else {
+          provider = FileImage(File(toFilePath()));
+        }
+        break;
+      case 'asset':
+        if (path.toLowerCase().endsWith('.svg')) {
+          provider = Svg.asset(toString().substring(8));
+        } else {
+          provider = AssetImage(toString().substring(8));
+        }
+        break;
+    }
+    return provider;
+  }
+}
