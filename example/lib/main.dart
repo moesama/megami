@@ -22,7 +22,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    styleCubit.setCss('asset://assets/style.css');
+    styleCubit.addCss('main', 'asset://assets/style.css');
   }
 
   @override
@@ -82,7 +82,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             Text('BTS').styled('.appbar-text'),
                             Row(
                               children: [
-                                Container().styled('.player-cover'),
+                                GestureDetector(
+                                    child: Container().styled('.player-cover'),
+                                  onTap: () {
+                                      // setState(() {
+                                        styleCubit.removeStyle('main');
+                                      // });
+                                  },
+                                ),
                               ],
                             ).styled('.player-panel'),
                           ],

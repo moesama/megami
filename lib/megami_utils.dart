@@ -53,7 +53,7 @@ class _Vector4<T> {
 }
 
 class _UriHelper {
-  static Uri from(UriTerm term) => Uri.parse(term.value);
+  static Uri from(UriTerm term) => Uri.tryParse(term.value);
 
   static Uri fromExp(Expression expression) {
     if (expression is UriTerm) return from(expression);

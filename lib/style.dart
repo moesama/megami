@@ -14,7 +14,7 @@ class StyledScaffold extends StatelessWidget {
     final cubit = style ?? styleCubit;
     return BlocProvider<StyleCubit>(
       create: (BuildContext context) => cubit,
-      child: BlocBuilder<StyleCubit, StyleSheet>(
+      child: BlocBuilder<StyleCubit, List<StyleSheet>>(
         builder: (context, state) =>
             state == null ? Container() : builder.call(context),
       ),
@@ -96,7 +96,7 @@ class _Style extends StatelessWidget {
   }
 
   Widget _applyStyle(
-      BuildContext context, StyleSheet stylesheet, Widget child) {
+      BuildContext context, Widget child) {
     var res = child;
     if (child is TabBar) {
       res = _StyleComponent.decorateTabIndicator(context, res,
@@ -117,12 +117,14 @@ class _Style extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     _resolve(context);
-    return BlocBuilder<StyleCubit, StyleSheet>(
-        builder: (BuildContext context, StyleSheet state) {
-      if (state != null) {
-        state.resolve(selector);
+    return BlocBuilder<StyleCubit, List<StyleSheet>>(
+        builder: (BuildContext context, List<StyleSheet> state) {
+      if (state != null && state.isNotEmpty) {
+        state.forEach((e) {
+          e.resolve(selector, basePath: e.basePath);
+        });
         var child = builder.call(context);
-        return _applyStyle(context, state, child);
+        return _applyStyle(context, child);
       }
       return builder.call(context);
     });

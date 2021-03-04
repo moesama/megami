@@ -1,6 +1,8 @@
 part of megami;
 
 abstract class _StyleComponent<T> {
+  String basePath;
+
   void merge(Declaration declaration);
 
   T build(BuildContext context);
@@ -95,44 +97,44 @@ abstract class _StyleComponent<T> {
     }
   }
 
-  static _StyleComponent create(Type type) {
+  static _StyleComponent create(Type type, {String basePath = ''}) {
     switch (type) {
       case _ConstraintsComponent:
-        return _ConstraintsComponent();
+        return _ConstraintsComponent()..basePath = basePath;
       case _PaddingComponent:
-        return _PaddingComponent();
+        return _PaddingComponent()..basePath = basePath;
       case _MarginComponent:
-        return _MarginComponent();
+        return _MarginComponent()..basePath = basePath;
       case _BackgroundComponent:
-        return _BackgroundComponent();
+        return _BackgroundComponent()..basePath = basePath;
       case _BackgroundBlendModeComponent:
-        return _BackgroundBlendModeComponent();
+        return _BackgroundBlendModeComponent()..basePath = basePath;
       case _BorderComponent:
-        return _BorderComponent();
+        return _BorderComponent()..basePath = basePath;
       case _BorderRadiusComponent:
-        return _BorderRadiusComponent();
+        return _BorderRadiusComponent()..basePath = basePath;
       case _BorderImageComponent:
-        return _BorderImageComponent();
+        return _BorderImageComponent()..basePath = basePath;
       case _BoxShadowComponent:
-        return _BoxShadowComponent();
+        return _BoxShadowComponent()..basePath = basePath;
       case _OpacityComponent:
-        return _OpacityComponent();
+        return _OpacityComponent()..basePath = basePath;
       case _FilterComponent:
-        return _FilterComponent();
+        return _FilterComponent()..basePath = basePath;
       case _AlignComponent:
-        return _AlignComponent();
+        return _AlignComponent()..basePath = basePath;
       case _TextColorComponent:
-        return _TextColorComponent();
+        return _TextColorComponent()..basePath = basePath;
       case _TextAlignComponent:
-        return _TextAlignComponent();
+        return _TextAlignComponent()..basePath = basePath;
       case _FontComponent:
-        return _FontComponent();
+        return _FontComponent()..basePath = basePath;
       case _TransitionComponent:
-        return _TransitionComponent();
+        return _TransitionComponent()..basePath = basePath;
       case _OverFlowComponent:
-        return _OverFlowComponent();
+        return _OverFlowComponent()..basePath = basePath;
       case _TransformComponent:
-        return _TransformComponent();
+        return _TransformComponent()..basePath = basePath;
       default:
         return null;
     }
@@ -873,7 +875,7 @@ class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
   _BackgroundCompose build(BuildContext context) {
     DecorationImage image;
     if (_uri != null) {
-      final provider = _uri.toImage();
+      final provider = _uri.toImage(basePath: basePath);
       if (provider != null) {
         image = DecorationImage(
             image: provider, fit: _fit, repeat: _repeat, alignment: _alignment);
@@ -1152,7 +1154,7 @@ class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
   _BackgroundCompose build(BuildContext context) {
     DecorationImage image;
     if (_uri != null) {
-      final provider = _uri.toImage();
+      final provider = _uri.toImage(basePath: basePath);
       if (provider != null) {
         image = DecorationImage(
           image: provider,

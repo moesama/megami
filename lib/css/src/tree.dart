@@ -460,6 +460,9 @@ class StyleSheet extends TreeNode {
   /// Contains charset, ruleset, directives (media, page, etc.), and selectors.
   final List<TreeNode> topLevels;
 
+  String basePath = '';
+  String key = '';
+
   StyleSheet(this.topLevels, SourceSpan span) : super(span) {
     for (final node in topLevels) {
       assert(node is TopLevelProduction || node is Directive);

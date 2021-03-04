@@ -1,7 +1,7 @@
 part of megami;
 
 extension _StyleSheetExt on StyleSheet {
-  void resolve(_SelectorSection selector) {
+  void resolve(_SelectorSection selector, {String basePath = ''}) {
     var store = _SelectorSection.getComputedStyle(selector);
     if (store == null) {
       store = _SelectorSection.createComputedStyle(selector);
@@ -16,7 +16,7 @@ extension _StyleSheetExt on StyleSheet {
           store.matched.entries.where((e) => !e.key.isElement).toList();
       sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
       store.styles.clear();
-      store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
+      store.styles.addAll(_merge(sortedEntries.map((e) => e.value), basePath: basePath));
       sortedEntries =
           store.matched.entries.where((e) => e.key.isElement).toList();
       sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
@@ -31,7 +31,7 @@ extension _StyleSheetExt on StyleSheet {
                   .toList()
       };
       elements.forEach((key, value) {
-        store.elementStyles[key] = _merge(value);
+        store.elementStyles[key] = _merge(value, basePath: basePath);
       });
     }
   }
@@ -357,14 +357,14 @@ extension TabBarExt on TabBar {
       );
 }
 
-Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
+Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups, {String basePath = ''}) {
   return groups.fold(<Type, _StyleComponent>{},
       (Map<Type, _StyleComponent> previousValue, group) {
     group.declarations.whereType<Declaration>().forEach((declaration) {
       var type = _StyleComponent.typeOf(declaration);
       if (type != null) {
         var component =
-            previousValue.putIfAbsent(type, () => _StyleComponent.create(type));
+            previousValue.putIfAbsent(type, () => _StyleComponent.create(type, basePath: basePath));
         component.merge(declaration);
       }
     });
@@ -504,7 +504,24 @@ extension IterableExt<E> on Iterable<E> {
 }
 
 extension UriExt on Uri {
-  ImageProvider toImage() {
+  ImageProvider toImage({String basePath = ''}) {
+    ImageProvider provider;
+    switch (scheme) {
+      case 'http':
+      case 'https':
+      case 'file':
+      case 'asset':
+        provider = toImageAbsolute();
+        break;
+      default:
+        final uri = Uri.tryParse('${basePath}/${toString()}');
+        provider = uri?.toImageAbsolute();
+        break;
+    }
+    return provider;
+  }
+
+  ImageProvider toImageAbsolute() {
     ImageProvider provider;
     switch (scheme) {
       case 'http':

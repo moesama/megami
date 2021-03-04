@@ -1,5 +1,5 @@
 .page-container { background-color: #f8f8f8; }
-.banner-wrap { background-image: url(asset://assets/images/banner.jpg); filter: contrast(80%); margin-bottom: 60pt; }
+.banner-wrap { background-image: url(images/banner.jpg); filter: contrast(80%); margin-bottom: 60pt; }
 .banner { background-color: #0022CC; background-blend-mode: color; }
 .search { color: #CCCCCC; height: 40pt; align: center; line-height: 20pt; border-radius: 20pt; padding: 0pt 20pt; margin: 0pt 15pt; background-color: rgba(255, 255, 255, 0.3); }
 .appbar-content { align: bottom; } .appbar-title, .appbar-subtitle, .appbar-text { color: white; align: left; margin: 4pt 20pt 0pt; text-align: start; }
@@ -11,9 +11,9 @@
 .section-op, .album-author { color: #97aacc; }
 .album-list { height: 45vw; } .album { margin-right: 10pt; }
 .album:first-child { margin-left: 20pt; }
-.album-cover { width: 27vw; height: 27vw; margin-bottom: 15pt; background-image: url(asset://assets/images/banner.jpg); background-size: cover; border-radius: 8pt; }
+.album-cover { width: 27vw; height: 27vw; margin-bottom: 15pt; background-image: url(images/banner.jpg); background-size: cover; border-radius: 8pt; }
 .album-title, .album-author { margin-bottom: 4pt; text-align: start; }
-.song { background-image: url(asset://assets/images/layout.svg); background-size: cover; border-radius: 15pt; }
+.song { background-image: url(images/layout.svg); background-size: cover; border-radius: 15pt; }
 .app-tab::tab-indicator { background-color: white; padding: 5pt 10pt; border-radius: 25pt; }
 .app-tab::tab-control { color: white; }
 .app-tab::tab-control-selected { color: blue; }

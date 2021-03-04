@@ -1,26 +1,35 @@
 part of megami;
 
-class StyleCubit extends Cubit<StyleSheet> {
-  StyleCubit({StyleSheet state}) : super(state);
+class StyleCubit extends Cubit<List<StyleSheet>> {
+  StyleCubit({List<StyleSheet> state}) : super(state);
 
-  void setStyle(String style) {
-    var stylesheet = parse(style);
-    // var exps = ((stylesheet.topLevels.first as RuleSet).declarationGroup.declarations.first as Declaration).expression.expressions;
-    // var term = (exps.first as FunctionTerm).params.expressions;
-    // print(term.toDebugString());
-    emit(stylesheet);
+  void addStyle(String key, String style, {String basePath = ''}) {
+    final stylesheet = parse(style)
+      ..basePath = basePath
+      ..key = key;
+    final list = state?.toList(growable: true) ?? [];
+    list.add(stylesheet);
+    emit(list);
   }
 
-  void setCss(String path) async {
+  void removeStyle(String key) {
+    final list = state?.toList(growable: true);
+    list?.removeWhere((element) => element.key == key);
+    emit(list);
+  }
+
+  void addCss(String key, String path) async {
     var uri = Uri.parse(path);
+    final basePath = path.substring(0, path.lastIndexOf('/'));
     switch (uri.scheme) {
       case 'file':
         final stylesheet = await File(uri.toFilePath()).readAsString();
-        setStyle(stylesheet);
+        addStyle(key, stylesheet, basePath: basePath);
         break;
       case 'asset':
-        final stylesheet = await rootBundle.loadString(uri.toString().substring(8));
-        setStyle(stylesheet);
+        final stylesheet =
+            await rootBundle.loadString(uri.toString().substring(8));
+        addStyle(key, stylesheet, basePath: basePath);
         break;
     }
   }
