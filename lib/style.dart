@@ -58,6 +58,10 @@ class _SelectorSection {
     return store.putIfAbsent(selector, () => _ComputedStyle());
   }
 
+  static void reset() {
+    store.clear();
+  }
+
   _ComputedStyle get computeStyle => _privateStyle ?? getComputedStyle(this);
 
   _SelectorSection({this.parent, this.sections, this.index});
