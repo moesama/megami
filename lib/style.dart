@@ -132,8 +132,7 @@ class _Style extends StatelessWidget {
     });
   }
 
-  void resolve(List<StyleSheet> styles,
-      {String basePath = '', bool append = false}) {
+  void resolve(List<StyleSheet> styles) {
     var store = _SelectorSection.getComputedStyle(selector);
     if (store == null) {
       store = _SelectorSection.createComputedStyle(selector);
@@ -150,7 +149,7 @@ class _Style extends StatelessWidget {
         sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
         store.styles.clear();
         store.styles.addAll(
-            _merge(sortedEntries.map((e) => e.value), basePath: basePath));
+            _merge(sortedEntries.map((e) => e.value), basePath: stylesheet.basePath));
         sortedEntries =
             store.matched.entries.where((e) => e.key.isElement).toList();
         sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
@@ -165,7 +164,7 @@ class _Style extends StatelessWidget {
                     .toList()
         };
         elements.forEach((key, value) {
-          store.elementStyles[key] = _merge(value, basePath: basePath);
+          store.elementStyles[key] = _merge(value, basePath: stylesheet.basePath);
         });
       });
     }
