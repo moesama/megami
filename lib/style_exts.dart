@@ -1,42 +1,5 @@
 part of megami;
 
-extension _StyleSheetExt on StyleSheet {
-  void resolve(_SelectorSection selector, {String basePath = ''}) {
-    var store = _SelectorSection.getComputedStyle(selector);
-    if (store == null) {
-      store = _SelectorSection.createComputedStyle(selector);
-      ruleSets.forEach((ruleSet) {
-        var matched = ruleSet.selectorGroup.selectors
-            .where((element) => element.match(selector));
-        matched.forEach((element) {
-          store.matched[element] = ruleSet.declarationGroup;
-        });
-      });
-      var sortedEntries =
-          store.matched.entries.where((e) => !e.key.isElement).toList();
-      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-      store.styles.clear();
-      store.styles.addAll(_merge(sortedEntries.map((e) => e.value), basePath: basePath));
-      sortedEntries =
-          store.matched.entries.where((e) => e.key.isElement).toList();
-      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-      store.elementStyles.clear();
-      final elements = {
-        for (var e in sortedEntries)
-          e.key.simpleSelectorSequences.last.simpleSelector
-                  as PseudoElementSelector:
-              sortedEntries
-                  .where((element) => element.key == e.key)
-                  .map((e) => e.value)
-                  .toList()
-      };
-      elements.forEach((key, value) {
-        store.elementStyles[key] = _merge(value, basePath: basePath);
-      });
-    }
-  }
-}
-
 extension _SelectorExt on Selector {
   bool match(_SelectorSection selector) {
     var strict = true;
