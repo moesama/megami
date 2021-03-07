@@ -25,7 +25,7 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
   StyleCubit({List<StyleSheet> state}) : super(state);
 
   void addStyle(String key, String style, {String basePath = ''}) {
-    final list = _addStyle(key, style, basePath: basePath);
+    final list = _addStyle(key, style, origin: state, basePath: basePath);
     _notifyChanged(list);
   }
 
@@ -42,21 +42,21 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
   }
 
   void setCss(List<CssBundle> bundles) {
+    var origin = <StyleSheet>[];
     Future.wait(bundles.map((e) => e.stylesheet.then((value) {
-      return _addStyle(e.key, value, basePath: e.basePath);
+      origin = _addStyle(e.key, value, origin: origin, basePath: e.basePath);
     }))).then((value) {
       if (value.isNotEmpty) {
-        value.sort((a, b) => a.length.compareTo(b.length));
-        _notifyChanged(value.last);
+        _notifyChanged(origin);
       }
     });
   }
 
-  List<StyleSheet> _addStyle(String key, String style, {String basePath = ''}) {
+  List<StyleSheet> _addStyle(String key, String style, {List<StyleSheet> origin, String basePath = ''}) {
     final stylesheet = parse(style)
       ..basePath = basePath
       ..key = key;
-    final list = state?.toList(growable: true) ?? [];
+    final list = origin?.toList(growable: true) ?? [];
     list.add(stylesheet);
     return list;
   }
