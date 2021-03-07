@@ -327,8 +327,8 @@ Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups, {String bas
       var type = _StyleComponent.typeOf(declaration);
       if (type != null) {
         var component =
-            previousValue.putIfAbsent(type, () => _StyleComponent.create(type, basePath: basePath));
-        component.merge(declaration);
+            previousValue.putIfAbsent(type, () => _StyleComponent.create(type));
+        component.merge(declaration, basePath: basePath);
       }
     });
     return previousValue;
@@ -467,24 +467,19 @@ extension IterableExt<E> on Iterable<E> {
 }
 
 extension UriExt on Uri {
-  ImageProvider toImage({String basePath = ''}) {
-    ImageProvider provider;
+  Uri toAbsolute({String basePath = ''}) {
     switch (scheme) {
       case 'http':
       case 'https':
       case 'file':
       case 'asset':
-        provider = toImageAbsolute();
-        break;
+        return this;
       default:
-        final uri = Uri.tryParse('${basePath}/${toString()}');
-        provider = uri?.toImageAbsolute();
-        break;
+        return Uri.tryParse('${basePath}/${toString()}');
     }
-    return provider;
   }
 
-  ImageProvider toImageAbsolute() {
+  ImageProvider toImage() {
     ImageProvider provider;
     switch (scheme) {
       case 'http':

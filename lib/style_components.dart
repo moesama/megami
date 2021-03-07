@@ -1,9 +1,7 @@
 part of megami;
 
 abstract class _StyleComponent<T> {
-  String basePath;
-
-  void merge(Declaration declaration);
+  void merge(Declaration declaration, {String basePath});
 
   T build(BuildContext context);
 
@@ -97,44 +95,44 @@ abstract class _StyleComponent<T> {
     }
   }
 
-  static _StyleComponent create(Type type, {String basePath = ''}) {
+  static _StyleComponent create(Type type) {
     switch (type) {
       case _ConstraintsComponent:
-        return _ConstraintsComponent()..basePath = basePath;
+        return _ConstraintsComponent();
       case _PaddingComponent:
-        return _PaddingComponent()..basePath = basePath;
+        return _PaddingComponent();
       case _MarginComponent:
-        return _MarginComponent()..basePath = basePath;
+        return _MarginComponent();
       case _BackgroundComponent:
-        return _BackgroundComponent()..basePath = basePath;
+        return _BackgroundComponent();
       case _BackgroundBlendModeComponent:
-        return _BackgroundBlendModeComponent()..basePath = basePath;
+        return _BackgroundBlendModeComponent();
       case _BorderComponent:
-        return _BorderComponent()..basePath = basePath;
+        return _BorderComponent();
       case _BorderRadiusComponent:
-        return _BorderRadiusComponent()..basePath = basePath;
+        return _BorderRadiusComponent();
       case _BorderImageComponent:
-        return _BorderImageComponent()..basePath = basePath;
+        return _BorderImageComponent();
       case _BoxShadowComponent:
-        return _BoxShadowComponent()..basePath = basePath;
+        return _BoxShadowComponent();
       case _OpacityComponent:
-        return _OpacityComponent()..basePath = basePath;
+        return _OpacityComponent();
       case _FilterComponent:
-        return _FilterComponent()..basePath = basePath;
+        return _FilterComponent();
       case _AlignComponent:
-        return _AlignComponent()..basePath = basePath;
+        return _AlignComponent();
       case _TextColorComponent:
-        return _TextColorComponent()..basePath = basePath;
+        return _TextColorComponent();
       case _TextAlignComponent:
-        return _TextAlignComponent()..basePath = basePath;
+        return _TextAlignComponent();
       case _FontComponent:
-        return _FontComponent()..basePath = basePath;
+        return _FontComponent();
       case _TransitionComponent:
-        return _TransitionComponent()..basePath = basePath;
+        return _TransitionComponent();
       case _OverFlowComponent:
-        return _OverFlowComponent()..basePath = basePath;
+        return _OverFlowComponent();
       case _TransformComponent:
-        return _TransformComponent()..basePath = basePath;
+        return _TransformComponent();
       default:
         return null;
     }
@@ -674,7 +672,7 @@ class _ConstraintsComponent extends _StyleComponent<BoxConstraints> {
   Dimen _maxHeight;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     if (declaration.expression.expressions.isEmpty) return;
     if (!Dimen.isDimen(declaration.expression.expressions.first)) return;
     var exp = declaration.expression.expressions.first as LiteralTerm;
@@ -721,7 +719,7 @@ class _PaddingComponent extends _StyleComponent<EdgeInsets> {
   final _Vector4<Dimen> _padding = _Vector4();
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     var sizes = (declaration.expression)
         .expressions
         .whereType<LiteralTerm>()
@@ -762,7 +760,7 @@ class _MarginComponent extends _StyleComponent<EdgeInsets> {
   final _Vector4<Dimen> _margin = _Vector4();
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     var sizes = declaration.expression.expressions
         .whereType<LiteralTerm>()
         .where((e) => Dimen.isDimen(e))
@@ -805,9 +803,9 @@ class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
   Gradient _gradient;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     _mergeColor(declaration);
-    _mergeImage(declaration);
+    _mergeImage(declaration, basePath);
     _mergeGradient(declaration);
   }
 
@@ -823,13 +821,13 @@ class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
     }
   }
 
-  void _mergeImage(Declaration declaration) {
+  void _mergeImage(Declaration declaration, String basePath) {
     switch (declaration.property) {
       case 'background':
       case 'background-image':
         var uri = _UriHelper.fromExp(declaration.expression);
         if (uri != null) {
-          _uri = uri;
+          _uri = uri.toAbsolute(basePath: basePath);
         }
         break;
     }
@@ -875,7 +873,7 @@ class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
   _BackgroundCompose build(BuildContext context) {
     DecorationImage image;
     if (_uri != null) {
-      final provider = _uri.toImage(basePath: basePath);
+      final provider = _uri.toImage();
       if (provider != null) {
         image = DecorationImage(
             image: provider, fit: _fit, repeat: _repeat, alignment: _alignment);
@@ -889,7 +887,7 @@ class _BackgroundBlendModeComponent extends _StyleComponent<BlendMode> {
   BlendMode _blendMode;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     _blendMode = _BlendModeHelper.fromExp(declaration.expression);
   }
 
@@ -902,7 +900,7 @@ class _BorderComponent extends _StyleComponent<Border> {
   final _Vector4<Color> _color = _Vector4<Color>().all(Colors.black);
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     _mergeWidth(declaration);
     _mergeColor(declaration);
   }
@@ -989,7 +987,7 @@ class _BorderRadiusComponent extends _StyleComponent<BorderRadiusGeometry> {
   final _Vector4<Dimen> _radiusY = _Vector4<Dimen>();
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     var exps = (declaration.expression).expressions;
     var indexOfOp = exps.indexWhere((element) => element is OperatorSlash);
     switch (declaration.property) {
@@ -1127,13 +1125,13 @@ class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
   final _Vector4<Dimen> _centerSlice = _Vector4();
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     switch (declaration.property) {
       case 'border-image':
       case 'border-image-source':
         var uri = _UriHelper.fromExp(declaration.expression);
         if (uri != null) {
-          _uri = uri;
+          _uri = uri.toAbsolute(basePath: basePath);
         }
         break;
     }
@@ -1154,7 +1152,7 @@ class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
   _BackgroundCompose build(BuildContext context) {
     DecorationImage image;
     if (_uri != null) {
-      final provider = _uri.toImage(basePath: basePath);
+      final provider = _uri.toImage();
       if (provider != null) {
         image = DecorationImage(
           image: provider,
@@ -1180,7 +1178,7 @@ class _BoxShadowComponent extends _StyleComponent<_ShadowCompose> {
   bool _inset = false;
 
   @override
-  void merge(Declaration declaration) => _merge(declaration.expression);
+  void merge(Declaration declaration, {String basePath}) => _merge(declaration.expression);
 
   void _merge(Expressions expressions) {
     var exps = expressions.expressions;
@@ -1225,7 +1223,7 @@ class _OpacityComponent extends _StyleComponent<double> {
   double _opacity = 1.0;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     if (declaration.expression.expressions.isEmpty) return;
     var exp = declaration.expression.expressions.first;
     if (exp is NumberTerm || exp is PercentageTerm) {
@@ -1244,7 +1242,7 @@ class _FilterComponent extends _StyleComponent<_FilterCompose> {
   double _opacity = 1.0;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     declaration.expression.expressions
         .whereType<FunctionTerm>()
         .forEach((element) {
@@ -1354,7 +1352,7 @@ class _AlignComponent extends _StyleComponent<Alignment> {
   Alignment _alignment;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     _alignment = _AlignmentHelper.fromExp(declaration.expression);
   }
 
@@ -1367,7 +1365,7 @@ class _TextColorComponent extends _StyleComponent<Color> {
   Color _color;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     switch (declaration.property) {
       case 'color':
         var color = _ColorHelper.fromExp(declaration.expression);
@@ -1386,7 +1384,7 @@ class _TextAlignComponent extends _StyleComponent<TextAlign> {
   TextAlign _alignment;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     _alignment = _AlignmentHelper.taFromExp(declaration.expression);
   }
 
@@ -1398,7 +1396,7 @@ class _FontComponent extends _StyleComponent<FontExpression> {
   FontExpression _font;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     if (declaration.hasDartStyle && declaration.dartStyle.isFont) {
       _font = declaration.dartStyle as FontExpression;
     }
@@ -1415,7 +1413,7 @@ class _TransitionComponent
   final List<Curve> _curves = [];
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     switch (declaration.property) {
       case 'transition':
         declaration.expression.resolvedExpressions
@@ -1478,7 +1476,7 @@ class _OverFlowComponent extends _StyleComponent<bool> {
   bool _overflowHidden = false;
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     _overflowHidden = declaration.expression.expressions
             .whereType<LiteralTerm>()
             .firstOrNull
@@ -1500,7 +1498,7 @@ class _TransformComponent extends _StyleComponent<_TransformCompose> {
   final List<Dimen> _translate = List.filled(3, const Dimen.zero());
 
   @override
-  void merge(Declaration declaration) {
+  void merge(Declaration declaration, {String basePath}) {
     switch (declaration.property) {
       case 'transform':
         _mergeMatrix(declaration);
