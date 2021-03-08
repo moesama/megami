@@ -404,8 +404,8 @@ abstract class _StyleComponent<T> {
           child: res,
           transform: transform.matrix,
           alignment: transform.origin ?? Alignment.center,
-          duration: opacityTransition.duration,
-          curve: opacityTransition.curve,
+          duration: transformTransition.duration,
+          curve: transformTransition.curve,
         );
       } else {
         res = Transform(
