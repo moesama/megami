@@ -1142,6 +1142,8 @@ class ExtendDeclaration extends Declaration {
 }
 
 class DeclarationGroup extends TreeNode {
+  String basePath = '';
+
   /// Can be either Declaration or RuleSet (if nested selector).
   final List<TreeNode> declarations;
 

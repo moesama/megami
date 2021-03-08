@@ -320,7 +320,7 @@ extension TabBarExt on TabBar {
       );
 }
 
-Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups, {String basePath = ''}) {
+Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
   return groups.fold(<Type, _StyleComponent>{},
       (Map<Type, _StyleComponent> previousValue, group) {
     group.declarations.whereType<Declaration>().forEach((declaration) {
@@ -328,7 +328,7 @@ Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups, {String bas
       if (type != null) {
         var component =
             previousValue.putIfAbsent(type, () => _StyleComponent.create(type));
-        component.merge(declaration, basePath: basePath);
+        component.merge(declaration, basePath: group.basePath);
       }
     });
     return previousValue;

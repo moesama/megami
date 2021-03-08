@@ -138,34 +138,35 @@ class _Style extends StatelessWidget {
       store = _SelectorSection.createComputedStyle(selector);
       styles.forEach((stylesheet) {
         stylesheet.ruleSets.forEach((ruleSet) {
-          var matched = ruleSet.selectorGroup.selectors
-              .where((element) => element.match(selector));
-          matched.forEach((element) {
-            store.matched[element] = ruleSet.declarationGroup;
+          var matched =
+              ruleSet.selectorGroup.selectors.where((s) => s.match(selector));
+          matched.forEach((selector) {
+            store.matched[selector] = ruleSet.declarationGroup
+              ..basePath = stylesheet.basePath;
           });
         });
-        var sortedEntries =
-            store.matched.entries.where((e) => !e.key.isElement).toList();
-        sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-        store.styles.clear();
-        store.styles.addAll(
-            _merge(sortedEntries.map((e) => e.value), basePath: stylesheet.basePath));
-        sortedEntries =
-            store.matched.entries.where((e) => e.key.isElement).toList();
-        sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-        store.elementStyles.clear();
-        final elements = {
-          for (var e in sortedEntries)
-            e.key.simpleSelectorSequences.last.simpleSelector
-                    as PseudoElementSelector:
-                sortedEntries
-                    .where((element) => element.key == e.key)
-                    .map((e) => e.value)
-                    .toList()
-        };
-        elements.forEach((key, value) {
-          store.elementStyles[key] = _merge(value, basePath: stylesheet.basePath);
-        });
+      });
+
+      var sortedEntries =
+      store.matched.entries.where((e) => !e.key.isElement).toList();
+      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+      store.styles.clear();
+      store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
+      sortedEntries =
+          store.matched.entries.where((e) => e.key.isElement).toList();
+      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+      store.elementStyles.clear();
+      final elements = {
+        for (var e in sortedEntries)
+          e.key.simpleSelectorSequences.last.simpleSelector
+          as PseudoElementSelector:
+          sortedEntries
+              .where((element) => element.key == e.key)
+              .map((e) => e.value)
+              .toList()
+      };
+      elements.forEach((key, value) {
+        store.elementStyles[key] = _merge(value);
       });
     }
   }
