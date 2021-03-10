@@ -561,6 +561,21 @@ abstract class _StyleComponent<T> {
             labelPadding: padding,
           );
   }
+  
+  // static TextField decorateTextFieldHint(BuildContext context, TextField textField,
+  //     {Iterable<_StyleComponent> components}) {
+  //   if (components == null || components.isEmpty) {
+  //     return textField;
+  //   }
+  //   final textAlign = components.whereType<_TextAlignComponent>().firstOrNull?.build(context);
+  //   final origin = textField.style ?? Theme.of(context).textTheme.bodyText1;
+  //   final textStyle = _merge(context, origin, components: components);
+  //   return textField.copy(
+  //     decoration: textField.decoration.copyWith(
+  //       hintStyle: textStyle
+  //     ),
+  //   );
+  // }
 
   static TextStyle _merge(BuildContext context, TextStyle origin,
       {Iterable<_StyleComponent> components, bool excludeColor = false}) {

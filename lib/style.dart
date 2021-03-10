@@ -114,6 +114,11 @@ class _Style extends StatelessWidget {
           components: selector.computeStyle
               ?.getComponentsByElements(['tab-control-selected']));
     }
+    // if (child is TextField) {
+    //   res = _StyleComponent.decorateTextFieldHint(context, res,
+    //       components: selector.computeStyle
+    //           ?.getComponentsByElements(['hint']));
+    // }
     return _StyleComponent.decorate(context, res,
         components: selector.computeStyle?.styles?.values);
   }
