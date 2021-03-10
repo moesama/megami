@@ -15,26 +15,48 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  List<String> buttonSelectors = [".button"];
+class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
+  TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    styleCubit.setCss("asset://assets/style.css");
+    _tabController = TabController(length: 2, vsync: this);
+    styleCubit.setCss([CssBundle('main', 'asset://assets/style.css')]);
   }
 
   @override
   Widget build(BuildContext context) {
     if (Platform.isAndroid) {
       // 以下两行 设置android状态栏为透明的沉浸。写在组件渲染之后，是为了在渲染后进行set赋值，覆盖状态栏，写在渲染之前MaterialApp组件会覆盖掉这个值。
-      SystemUiOverlayStyle systemUiOverlayStyle =
+      final systemUiOverlayStyle =
           SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
     }
     return MaterialApp(
       home: StyledScaffold(builder: (context) {
         return Scaffold(
+          // appBar: AppBar(
+          //   backgroundColor: Colors.transparent,
+          //   elevation: 0,
+          //   bottom: TabBar(
+          //     tabs: [
+          //       Row(
+          //         mainAxisAlignment: MainAxisAlignment.center,
+          //         children: [
+          //           Image.asset(
+          //             'assets/images/banner.jpg',
+          //             width: 16,
+          //             height: 16,
+          //           ),
+          //           Text('11111'),
+          //         ],
+          //       ),
+          //       Tab(text: '2222')
+          //     ],
+          //     controller: _tabController,
+          //   ).styled('.app-tab'),
+          // ).styled('.app-bar'),
           body: CustomScrollView(
             slivers: [
               SliverAppBar(
@@ -50,7 +72,7 @@ class _MyAppState extends State<MyApp> {
                 flexibleSpace: FlexibleSpaceBar(
                   background: Stack(
                     children: [
-                    Container().styled('.banner').styled('.banner-wrap'),
+                      Container().styled('.banner').styled('.banner-wrap'),
                       OverflowBox(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -60,7 +82,14 @@ class _MyAppState extends State<MyApp> {
                             Text('BTS').styled('.appbar-text'),
                             Row(
                               children: [
-                                Container().styled('.player-cover'),
+                                GestureDetector(
+                                    child: Container().styled('.player-cover'),
+                                  onTap: () {
+                                      // setState(() {
+                                        styleCubit.removeStyle('main');
+                                      // });
+                                  },
+                                ),
                               ],
                             ).styled('.player-panel'),
                           ],

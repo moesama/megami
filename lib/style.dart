@@ -14,8 +14,9 @@ class StyledScaffold extends StatelessWidget {
     final cubit = style ?? styleCubit;
     return BlocProvider<StyleCubit>(
       create: (BuildContext context) => cubit,
-      child: BlocBuilder<StyleCubit, StyleSheet>(
-        builder: (context, state) => state == null ? Container() : builder.call(context),
+      child: BlocBuilder<StyleCubit, List<StyleSheet>>(
+        builder: (context, state) =>
+            state == null ? Container() : builder.call(context),
       ),
     );
   }
@@ -24,6 +25,15 @@ class StyledScaffold extends StatelessWidget {
 class _ComputedStyle {
   final Map<Selector, DeclarationGroup> matched = {};
   final Map<Type, _StyleComponent> styles = {};
+  final Map<PseudoElementSelector, Map<Type, _StyleComponent>> elementStyles =
+      {};
+
+  List<_StyleComponent> getComponentsByElements(List<String> elements) =>
+      elementStyles.entries
+          .where((e) => elements.contains(e.key.name.trim()))
+          .map((e) => e.value.values)
+          .expand((e) => e)
+          .toList();
 }
 
 class _SelectorSection {
@@ -36,15 +46,21 @@ class _SelectorSection {
   static final Map<_SelectorSection, _ComputedStyle> store = {};
 
   static _ComputedStyle getComputedStyle(_SelectorSection selector) =>
-      store.entries.firstWhereOrNull((element) => element.key == selector)?.value;
+      store.entries
+          .firstWhereOrNull((element) => element.key == selector)
+          ?.value;
 
   static _ComputedStyle createComputedStyle(_SelectorSection selector) {
     // use private style store if index is not 0
-    if (selector.index != 0) {
+    if (selector.index >= 0) {
       selector._privateStyle = _ComputedStyle();
       return selector._privateStyle;
     }
     return store.putIfAbsent(selector, () => _ComputedStyle());
+  }
+
+  static void reset() {
+    store.clear();
   }
 
   _ComputedStyle get computeStyle => _privateStyle ?? getComputedStyle(this);
@@ -84,24 +100,95 @@ class _Style extends StatelessWidget {
     });
   }
 
-  Widget _applyStyle(
-          BuildContext context, StyleSheet stylesheet, Widget child) =>
-      _StyleComponent.decorate(context, child,
-          components: selector.computeStyle?.styles?.values);
+  Widget _applyStyle(BuildContext context, Widget child) {
+    var res = child;
+    if (child is TabBar) {
+      res = _StyleComponent.decorateTabIndicator(context, res,
+          components: selector.computeStyle
+              ?.getComponentsByElements(['tab-indicator']));
+      res = _StyleComponent.decorateTabControl(context, res,
+          components:
+              selector.computeStyle?.getComponentsByElements(['tab-control']));
+      res = _StyleComponent.decorateTabControl(context, res,
+          selected: true,
+          components: selector.computeStyle
+              ?.getComponentsByElements(['tab-control-selected']));
+    }
+    // if (child is TextField) {
+    //   res = _StyleComponent.decorateTextFieldHint(context, res,
+    //       components: selector.computeStyle
+    //           ?.getComponentsByElements(['hint']));
+    // }
+    return _StyleComponent.decorate(context, res,
+        components: selector.computeStyle?.styles?.values);
+  }
 
   @override
   Widget build(BuildContext context) {
     _resolve(context);
-    return BlocBuilder<StyleCubit, StyleSheet>(
-        builder: (BuildContext context, StyleSheet state) {
-      if (state != null) {
-        state.resolve(selector);
+    return BlocBuilder<StyleCubit, List<StyleSheet>>(
+        builder: (BuildContext context, List<StyleSheet> state) {
+      if (state != null && state.isNotEmpty) {
+        resolve(state);
         var child = builder.call(context);
-        return _applyStyle(context, state, child);
+        return _applyStyle(context, child);
       }
       return builder.call(context);
     });
   }
+
+  void resolve(List<StyleSheet> styles) {
+    var store = _SelectorSection.getComputedStyle(selector);
+    if (store == null) {
+      store = _SelectorSection.createComputedStyle(selector);
+      styles.forEach((stylesheet) {
+        stylesheet.ruleSets.forEach((ruleSet) {
+          var matched =
+              ruleSet.selectorGroup.selectors.where((s) => s.match(selector));
+          matched.forEach((selector) {
+            store.matched[selector] = ruleSet.declarationGroup
+              ..basePath = stylesheet.basePath;
+          });
+        });
+      });
+
+      var sortedEntries =
+      store.matched.entries.where((e) => !e.key.isElement).toList();
+      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+      store.styles.clear();
+      store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
+      sortedEntries =
+          store.matched.entries.where((e) => e.key.isElement).toList();
+      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+      store.elementStyles.clear();
+      final elements = {
+        for (var e in sortedEntries)
+          e.key.simpleSelectorSequences.last.simpleSelector
+          as PseudoElementSelector:
+          sortedEntries
+              .where((element) => element.key == e.key)
+              .map((e) => e.value)
+              .toList()
+      };
+      elements.forEach((key, value) {
+        store.elementStyles[key] = _merge(value);
+      });
+    }
+  }
+}
+
+class _PreferredSizeStyle extends _Style implements PreferredSizeWidget {
+  final Size Function() sizeProvider;
+
+  _PreferredSizeStyle({
+    Key key,
+    @required this.sizeProvider,
+    WidgetBuilder builder,
+    _SelectorSection selector,
+  }) : super(key: key, builder: builder, selector: selector);
+
+  @override
+  Size get preferredSize => sizeProvider();
 }
 
 class _TextStyleWrapper extends StatelessWidget {
@@ -114,13 +201,9 @@ class _TextStyleWrapper extends StatelessWidget {
       : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return _Style(
-      selector: selector,
-      builder: (context) {
-        return _StyleComponent.decorateText(context, this,
-            components: selector.computeStyle?.styles?.values);
-      },
-    );
-  }
+  Widget build(BuildContext context) => _Style(
+        selector: selector,
+        builder: (context) => _StyleComponent.decorateText(context, this,
+            components: selector.computeStyle?.styles?.values),
+      );
 }

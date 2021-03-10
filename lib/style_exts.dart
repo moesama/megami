@@ -1,25 +1,5 @@
 part of megami;
 
-extension _StyleSheetExt on StyleSheet {
-  void resolve(_SelectorSection selector) {
-    var store = _SelectorSection.getComputedStyle(selector);
-    if (store == null) {
-      store = _SelectorSection.createComputedStyle(selector);
-      ruleSets.forEach((ruleSet) {
-        var matched = ruleSet.selectorGroup.selectors
-            .where((element) => element.match(selector));
-        matched.forEach((element) {
-          store.matched[element] = ruleSet.declarationGroup;
-        });
-      });
-      var sortedEntries = store.matched.entries.toList();
-      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-      store.styles.clear();
-      store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
-    }
-  }
-}
-
 extension _SelectorExt on Selector {
   bool match(_SelectorSection selector) {
     var strict = true;
@@ -34,6 +14,10 @@ extension _SelectorExt on Selector {
     });
     return matched != null;
   }
+
+  bool get isElement =>
+      simpleSelectorSequences.lastOrNull != null &&
+      simpleSelectorSequences.last.simpleSelector is PseudoElementSelector;
 
   int get weight => simpleSelectorSequences.fold(
       0, (previousValue, element) => previousValue + element.weight);
@@ -74,6 +58,14 @@ extension _SimpleSelectorExt on SimpleSelector {
         return (this as PseudoClassSelector).match(selector, index);
       case PseudoClassFunctionSelector:
         return (this as PseudoClassFunctionSelector).match(selector, index);
+      case PseudoElementSelector:
+        switch (name) {
+          case 'tab-control':
+          case 'tab-control-selected':
+          case 'tab-indicator':
+            return true;
+        }
+        return false;
       default:
         return false;
     }
@@ -183,47 +175,46 @@ extension _TextFieldExt on TextField {
   TextField copy(
           {TextEditingController controller,
           FocusNode focusNode,
-          InputDecoration decoration = const InputDecoration(),
+          InputDecoration decoration,
           TextInputType keyboardType,
           TextInputAction textInputAction,
-          TextCapitalization textCapitalization = TextCapitalization.none,
+          TextCapitalization textCapitalization,
           TextStyle style,
           StrutStyle strutStyle,
-          TextAlign textAlign = TextAlign.start,
+          TextAlign textAlign,
           TextAlignVertical textAlignVertical,
           TextDirection textDirection,
-          bool readOnly = false,
+          bool readOnly,
           ToolbarOptions toolbarOptions,
           bool showCursor,
-          bool autofocus = false,
-          String obscuringCharacter = '•',
-          bool obscureText = false,
-          bool autocorrect = true,
+          bool autofocus,
+          String obscuringCharacter,
+          bool obscureText,
+          bool autocorrect,
           SmartDashesType smartDashesType,
           SmartQuotesType smartQuotesType,
-          bool enableSuggestions = true,
-          int maxLines = 1,
+          bool enableSuggestions,
+          int maxLines,
           int minLines,
-          bool expands = false,
+          bool expands,
           int maxLength,
-          bool maxLengthEnforced = true,
+          bool maxLengthEnforced,
           void Function(String) onChanged,
           void Function() onEditingComplete,
           void Function(String) onSubmitted,
           void Function(String, Map<String, dynamic>) onAppPrivateCommand,
           List<TextInputFormatter> inputFormatters,
           bool enabled,
-          double cursorWidth = 2.0,
+          double cursorWidth,
           double cursorHeight,
           Radius cursorRadius,
           Color cursorColor,
-          ui.BoxHeightStyle selectionHeightStyle = ui.BoxHeightStyle.tight,
-          ui.BoxWidthStyle selectionWidthStyle = ui.BoxWidthStyle.tight,
+          ui.BoxHeightStyle selectionHeightStyle,
+          ui.BoxWidthStyle selectionWidthStyle,
           Brightness keyboardAppearance,
-          EdgeInsets scrollPadding = const EdgeInsets.all(20.0),
-          DragStartBehavior dragStartBehavior = DragStartBehavior.start,
-          bool enableInteractiveSelection = true,
-          TextSelectionControls selectionControls,
+          EdgeInsets scrollPadding,
+          DragStartBehavior dragStartBehavior,
+          bool enableInteractiveSelection,
           void Function() onTap,
           MouseCursor mouseCursor,
           Widget Function(BuildContext,
@@ -287,6 +278,47 @@ extension _TextFieldExt on TextField {
       );
 }
 
+extension TabBarExt on TabBar {
+  TabBar copy({
+    List<Widget> tabs,
+    TabController controller,
+    bool isScrollable,
+    Color indicatorColor,
+    double indicatorWeight,
+    EdgeInsetsGeometry indicatorPadding,
+    Decoration indicator,
+    TabBarIndicatorSize indicatorSize,
+    Color labelColor,
+    TextStyle labelStyle,
+    EdgeInsetsGeometry labelPadding,
+    Color unselectedLabelColor,
+    TextStyle unselectedLabelStyle,
+    DragStartBehavior dragStartBehavior,
+    MouseCursor mouseCursor,
+    ValueChanged<int> onTap,
+    ScrollPhysics physics,
+  }) =>
+      TabBar(
+        tabs: tabs ?? this.tabs,
+        controller: controller ?? this.controller,
+        isScrollable: isScrollable ?? this.isScrollable,
+        indicatorColor: indicatorColor ?? this.indicatorColor,
+        indicatorWeight: indicatorWeight ?? this.indicatorWeight,
+        indicatorPadding: indicatorPadding ?? this.indicatorPadding,
+        indicator: indicator ?? this.indicator,
+        indicatorSize: indicatorSize ?? this.indicatorSize,
+        labelColor: labelColor ?? this.labelColor,
+        labelStyle: labelStyle ?? this.labelStyle,
+        labelPadding: labelPadding ?? this.labelPadding,
+        unselectedLabelColor: unselectedLabelColor ?? this.unselectedLabelColor,
+        unselectedLabelStyle: unselectedLabelStyle ?? this.unselectedLabelStyle,
+        dragStartBehavior: dragStartBehavior ?? this.dragStartBehavior,
+        mouseCursor: mouseCursor ?? this.mouseCursor,
+        onTap: onTap ?? this.onTap,
+        physics: physics ?? this.physics,
+      );
+}
+
 Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
   return groups.fold(<Type, _StyleComponent>{},
       (Map<Type, _StyleComponent> previousValue, group) {
@@ -295,7 +327,7 @@ Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
       if (type != null) {
         var component =
             previousValue.putIfAbsent(type, () => _StyleComponent.create(type));
-        component.merge(declaration);
+        component.merge(declaration, basePath: group.basePath);
       }
     });
     return previousValue;
@@ -303,20 +335,32 @@ Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
 }
 
 extension StyleExt on Widget {
-  Widget styled(dynamic selectors, {int index = 0}) {
+  Widget styled(dynamic selectors, {int index = -1}) {
     if (selectors is String) {
       var section = _SelectorSection(sections: [selectors], index: index);
-      return _Style(
-        selector: section,
-        builder: (context) => this,
-      );
+      return this is PreferredSizeWidget
+          ? _PreferredSizeStyle(
+              sizeProvider: () => (this as PreferredSizeWidget).preferredSize,
+              selector: section,
+              builder: (context) => this,
+            )
+          : _Style(
+              selector: section,
+              builder: (context) => this,
+            );
     }
     if (selectors is List) {
       var section = _SelectorSection(sections: selectors, index: index);
-      return _Style(
-        selector: section,
-        builder: (context) => this,
-      );
+      return this is PreferredSizeWidget
+          ? _PreferredSizeStyle(
+              sizeProvider: () => (this as PreferredSizeWidget).preferredSize,
+              selector: section,
+              builder: (context) => this,
+            )
+          : _Style(
+              selector: section,
+              builder: (context) => this,
+            );
     }
     return this;
   }
@@ -408,10 +452,58 @@ extension IterableExt<E> on Iterable<E> {
     return first;
   }
 
+  E get lastOrNull {
+    if (isEmpty) return null;
+    return last;
+  }
+
   E firstWhereOrNull(bool Function(E element) test) {
     for (var element in this) {
       if (test(element)) return element;
     }
     return null;
+  }
+}
+
+extension UriExt on Uri {
+  Uri toAbsolute({String basePath = ''}) {
+    switch (scheme) {
+      case 'http':
+      case 'https':
+      case 'file':
+      case 'asset':
+        return this;
+      default:
+        return Uri.tryParse('${basePath}/${toString()}');
+    }
+  }
+
+  ImageProvider toImage() {
+    ImageProvider provider;
+    switch (scheme) {
+      case 'http':
+      case 'https':
+        if (path.toLowerCase().endsWith('.svg')) {
+          provider = Svg.network(toString());
+        } else {
+          provider = NetworkImage(toString());
+        }
+        break;
+      case 'file':
+        if (path.toLowerCase().endsWith('.svg')) {
+          provider = Svg.file(toFilePath());
+        } else {
+          provider = FileImage(File(toFilePath()));
+        }
+        break;
+      case 'asset':
+        if (path.toLowerCase().endsWith('.svg')) {
+          provider = Svg.asset(toString().substring(8));
+        } else {
+          provider = AssetImage(toString().substring(8));
+        }
+        break;
+    }
+    return provider;
   }
 }

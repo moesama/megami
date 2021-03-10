@@ -53,7 +53,7 @@ class _Vector4<T> {
 }
 
 class _UriHelper {
-  static Uri from(UriTerm term) => Uri.parse(term.value);
+  static Uri from(UriTerm term) => Uri.tryParse(term.value);
 
   static Uri fromExp(Expression expression) {
     if (expression is UriTerm) return from(expression);
@@ -142,8 +142,10 @@ class _GradientHelper {
         if (dir is AngleTerm) {
           transform = _GradientTransformHelper.from(dir);
         } else if (dir is Expressions && dir.expressions.isNotEmpty) {
-          var begin = dir.expressions.first;
-          if (begin is LiteralTerm && begin.value == 'to') {
+          var begin = dir.expressions.firstOrNull;
+          if (begin != null &&
+              begin is LiteralTerm &&
+              begin.value.toString() == 'to') {
             endAlignment = _AlignmentHelper.fromExp(dir);
           }
         } else {
