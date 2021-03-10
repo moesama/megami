@@ -175,7 +175,7 @@ abstract class _StyleComponent<T> {
       res = (res as TextField).copy(
         style: textStyle,
         textAlign: textAlign,
-        decoration: InputDecoration(
+        decoration: (res as TextField).decoration.copyWith(
           isCollapsed: true,
           contentPadding: padding,
           border: InputBorder.none,

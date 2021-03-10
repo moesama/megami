@@ -13,7 +13,7 @@
 .album:first-child { margin-left: 20pt; }
 .album-cover { width: 27vw; height: 27vw; margin-bottom: 15pt; background-image: url(images/banner.jpg); background-size: cover; border-radius: 8pt; }
 .album-title, .album-author { margin-bottom: 4pt; text-align: start; }
-.song { background-image: url(images/layout.svg); background-size: cover; border-radius: 15pt; }
+.song { background: url(images/divider.png) repeat-x; border-radius: 15pt; }
 .app-tab::tab-indicator { background-color: white; padding: 5pt 10pt; border-radius: 25pt; }
 .app-tab::tab-control { color: white; }
 .app-tab::tab-control-selected { color: blue; }
