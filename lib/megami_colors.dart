@@ -3,13 +3,13 @@ part of megami;
 class _ColorHelper {
   static Color fromHex(HexColorTerm term) => term.value;
 
-  static Color fromExps(Expressions exps) {
-    if (exps.expressions.isEmpty) return null;
-    Color color;
-    for (var exp in exps.expressions) {
+  static Color? fromExps(Expressions? exps) {
+    if (exps?.expressions.isNotEmpty != true) return null;
+    Color? color;
+    for (var exp in exps!.expressions) {
       switch (exp.runtimeType) {
         case HexColorTerm:
-          color = fromHex(exp);
+          color = fromHex(exp as HexColorTerm);
           break;
       }
       if (color != null) return color;
@@ -17,12 +17,12 @@ class _ColorHelper {
     return null;
   }
 
-  static Color fromExp(Expression exp) {
-    switch (exp.runtimeType) {
+  static Color? fromExp(Expression? exp) {
+    switch (exp?.runtimeType) {
       case HexColorTerm:
-        return fromHex(exp);
+        return fromHex(exp as HexColorTerm);
       case Expressions:
-        return fromExps(exp);
+        return fromExps(exp as Expressions);
       default:
         return null;
     }

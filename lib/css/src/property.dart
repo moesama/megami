@@ -22,7 +22,7 @@ abstract class _StyleProperty {
   ///
   /// then _cssExpression would return 'rgba(255,255,0)'.  See
   /// <http://www.w3.org/TR/CSS21/grammar.html>
-  String get cssExpression;
+  String? get cssExpression;
 }
 
 /// Base interface for Color, HSL and RGB.
@@ -39,7 +39,7 @@ abstract class ColorBase {
 /// General purpse Color class.  Represent a color as an ARGB value that can be
 /// converted to and from num, hex string, hsl, hsla, rgb, rgba and SVG pre-
 /// defined color constant.
-class CssColor implements _StyleProperty, ColorBase {
+class Color implements _StyleProperty, ColorBase {
   // If _argb length is 6 it's an rrggbb otherwise it's aarrggbb.
   final String _argb;
 
@@ -52,7 +52,7 @@ class CssColor implements _StyleProperty, ColorBase {
   /// The [rgb] value of 0xffd700 would map to #ffd700 or the constant
   /// Color.gold, where ff is red intensity, d7 is green intensity, and 00 is
   /// blue intensity.
-  CssColor(int rgb, [num alpha]) : _argb = CssColor._rgbToArgbString(rgb, alpha);
+  Color(int rgb, [num? alpha]) : _argb = Color._rgbToArgbString(rgb, alpha);
 
   /// RGB takes three values. The [red], [green], and [blue] parameters are
   /// the intensity of those components where '0' is the least and '256' is the
@@ -62,16 +62,16 @@ class CssColor implements _StyleProperty, ColorBase {
   /// '0' (completely transparent) to '1.0' (completely opaque).  It will
   /// internally be mapped to an int between '0' and '255' like the other color
   /// components.
-  CssColor.createRgba(int red, int green, int blue, [num alpha])
-      : _argb = CssColor.convertToHexString(
-            CssColor._clamp(red, 0, 255),
-            CssColor._clamp(green, 0, 255),
-            CssColor._clamp(blue, 0, 255),
-            alpha != null ? CssColor._clamp(alpha, 0, 1) : alpha);
+  Color.createRgba(int red, int green, int blue, [num? alpha])
+      : _argb = Color.convertToHexString(
+            Color._clamp(red, 0, 255),
+            Color._clamp(green, 0, 255),
+            Color._clamp(blue, 0, 255),
+            alpha != null ? Color._clamp(alpha, 0, 1) : alpha);
 
   /// Creates a new color from a CSS color string. For more information, see
   /// <https://developer.mozilla.org/en/CSS/color>.
-  CssColor.css(String color) : _argb = CssColor._convertCssToArgb(color);
+  Color.css(String color) : _argb = Color._convertCssToArgb(color)!;
 
   // TODO(jmesserly): I found the use of percents a bit suprising.
   /// HSL takes three values.  The [hueDegree] degree on the color wheel; '0' is
@@ -85,13 +85,13 @@ class CssColor implements _StyleProperty, ColorBase {
   /// If [alpha] is provided, it is the level of translucency which ranges from
   /// '0' (completely transparent foreground) to '1.0' (completely opaque
   /// foreground).
-  CssColor.createHsla(num hueDegree, num saturationPercent, num lightnessPercent,
-      [num alpha])
+  Color.createHsla(num hueDegree, num saturationPercent, num lightnessPercent,
+      [num? alpha])
       : _argb = Hsla(
-                CssColor._clamp(hueDegree, 0, 360) / 360,
-                CssColor._clamp(saturationPercent, 0, 100) / 100,
-                CssColor._clamp(lightnessPercent, 0, 100) / 100,
-                alpha != null ? CssColor._clamp(alpha, 0, 1) : alpha)
+                Color._clamp(hueDegree, 0, 360) / 360,
+                Color._clamp(saturationPercent, 0, 100) / 100,
+                Color._clamp(lightnessPercent, 0, 100) / 100,
+                alpha != null ? Color._clamp(alpha, 0, 1) : alpha)
             .toHexArgbString();
 
   /// The hslaRaw takes three values.  The [hue] degree on the color wheel; '0'
@@ -107,16 +107,16 @@ class CssColor implements _StyleProperty, ColorBase {
   ///   [alpha]      level of translucency range of values is 0..1, zero is a
   ///                completely transparent foreground and 1 is a completely
   ///                opaque foreground.
-  CssColor.hslaRaw(num hue, num saturation, num lightness, [num alpha])
+  Color.hslaRaw(num hue, num saturation, num lightness, [num? alpha])
       : _argb = Hsla(
-                CssColor._clamp(hue, 0, 1),
-                CssColor._clamp(saturation, 0, 1),
-                CssColor._clamp(lightness, 0, 1),
-                alpha != null ? CssColor._clamp(alpha, 0, 1) : alpha)
+                Color._clamp(hue, 0, 1),
+                Color._clamp(saturation, 0, 1),
+                Color._clamp(lightness, 0, 1),
+                alpha != null ? Color._clamp(alpha, 0, 1) : alpha)
             .toHexArgbString();
 
   /// Generate a real constant for pre-defined colors (no leading #).
-  const CssColor.hex(this._argb);
+  const Color.hex(this._argb);
 
   // TODO(jmesserly): this is needed by the example so leave it exposed for now.
   @override
@@ -132,56 +132,56 @@ class CssColor implements _StyleProperty, ColorBase {
     if (_argb.length == 6) {
       return '#$_argb'; // RGB only, no alpha blending.
     } else {
-      num alpha = CssColor.hexToInt(_argb.substring(0, 2));
+      num alpha = Color.hexToInt(_argb.substring(0, 2));
       var a = (alpha / 255).toStringAsPrecision(2);
-      var r = CssColor.hexToInt(_argb.substring(2, 4));
-      var g = CssColor.hexToInt(_argb.substring(4, 6));
-      var b = CssColor.hexToInt(_argb.substring(6, 8));
+      var r = Color.hexToInt(_argb.substring(2, 4));
+      var g = Color.hexToInt(_argb.substring(4, 6));
+      var b = Color.hexToInt(_argb.substring(6, 8));
       return 'rgba($r,$g,$b,$a)';
     }
   }
 
   Rgba get rgba {
     var nextIndex = 0;
-    num a;
+    num? a;
     if (_argb.length == 8) {
       // Get alpha blending value 0..255
-      var alpha = CssColor.hexToInt(_argb.substring(nextIndex, nextIndex + 2));
+      var alpha = Color.hexToInt(_argb.substring(nextIndex, nextIndex + 2));
       // Convert to value from 0..1
       a = double.parse((alpha / 255).toStringAsPrecision(2));
       nextIndex += 2;
     }
-    var r = CssColor.hexToInt(_argb.substring(nextIndex, nextIndex + 2));
+    var r = Color.hexToInt(_argb.substring(nextIndex, nextIndex + 2));
     nextIndex += 2;
-    var g = CssColor.hexToInt(_argb.substring(nextIndex, nextIndex + 2));
+    var g = Color.hexToInt(_argb.substring(nextIndex, nextIndex + 2));
     nextIndex += 2;
-    var b = CssColor.hexToInt(_argb.substring(nextIndex, nextIndex + 2));
+    var b = Color.hexToInt(_argb.substring(nextIndex, nextIndex + 2));
     return Rgba(r, g, b, a);
   }
 
   Hsla get hsla => Hsla.fromRgba(rgba);
 
   @override
-  int get argbValue => CssColor.hexToInt(_argb);
+  int get argbValue => Color.hexToInt(_argb);
 
   @override
-  bool operator ==(other) => CssColor.equal(this, other);
+  bool operator ==(other) => Color.equal(this, other);
 
   @override
   String toHexArgbString() => _argb;
 
-  CssColor darker(num amount) {
-    var newRgba = CssColor._createNewTintShadeFromRgba(rgba, -amount);
-    return CssColor.hex('${newRgba.toHexArgbString()}');
+  Color darker(num amount) {
+    var newRgba = Color._createNewTintShadeFromRgba(rgba, -amount);
+    return Color.hex('${newRgba.toHexArgbString()}');
   }
 
-  CssColor lighter(num amount) {
-    var newRgba = CssColor._createNewTintShadeFromRgba(rgba, amount);
-    return CssColor.hex('${newRgba.toHexArgbString()}');
+  Color lighter(num amount) {
+    var newRgba = Color._createNewTintShadeFromRgba(rgba, amount);
+    return Color.hex('${newRgba.toHexArgbString()}');
   }
 
   static bool equal(ColorBase curr, other) {
-    if (other is CssColor) {
+    if (other is Color) {
       var o = other;
       return o.toHexArgbString() == curr.toHexArgbString();
     } else if (other is Rgba) {
@@ -200,19 +200,19 @@ class CssColor implements _StyleProperty, ColorBase {
 
   // Conversion routines:
 
-  static String _rgbToArgbString(int rgba, num alpha) {
-    int a;
+  static String _rgbToArgbString(int rgba, num? alpha) {
+    num? a;
     // If alpha is defined then adjust from 0..1 to 0..255 value, if not set
     // then a is left as undefined and passed to convertToHexString.
     if (alpha != null) {
-      a = (CssColor._clamp(alpha, 0, 1) * 255).round();
+      a = (Color._clamp(alpha, 0, 1) * 255).round();
     }
 
     var r = (rgba & 0xff0000) >> 0x10;
     var g = (rgba & 0xff00) >> 8;
     var b = rgba & 0xff;
 
-    return CssColor.convertToHexString(r, g, b, a);
+    return Color.convertToHexString(r, g, b, a);
   }
 
   static const int _rgbCss = 1;
@@ -223,12 +223,12 @@ class CssColor implements _StyleProperty, ColorBase {
   /// Parse CSS expressions of the from #rgb, rgb(r,g,b), rgba(r,g,b,a),
   /// hsl(h,s,l), hsla(h,s,l,a) and SVG colors (e.g., darkSlateblue, etc.) and
   /// convert to argb.
-  static String _convertCssToArgb(String value) {
+  static String? _convertCssToArgb(String value) {
     // TODO(terry): Better parser/regex for converting CSS properties.
     var color = value.trim().replaceAll('\\s', '');
     if (color[0] == '#') {
       var v = color.substring(1);
-      CssColor.hexToInt(v); // Valid hexadecimal, throws if not.
+      Color.hexToInt(v); // Valid hexadecimal, throws if not.
       return v;
     } else if (color.isNotEmpty && color[color.length - 1] == ')') {
       int type;
@@ -257,9 +257,11 @@ class CssColor implements _StyleProperty, ColorBase {
       }
       switch (type) {
         case _rgbCss:
-          return CssColor.convertToHexString(args[0].toInt(), args[1].toInt(), args[2].toInt());
+          return Color.convertToHexString(
+              args[0].toInt(), args[1].toInt(), args[2].toInt());
         case _rgbaCss:
-          return CssColor.convertToHexString(args[0].toInt(), args[1].toInt(), args[2].toInt(), args[3]);
+          return Color.convertToHexString(
+              args[0].toInt(), args[1].toInt(), args[2].toInt(), args[3]);
         case _hslCss:
           return Hsla(args[0], args[1], args[2]).toHexArgbString();
         case _hslaCss:
@@ -275,12 +277,12 @@ class CssColor implements _StyleProperty, ColorBase {
 
   static int hexToInt(String hex) => int.parse(hex, radix: 16);
 
-  static String convertToHexString(int r, int g, int b, [num a]) {
-    var rHex = CssColor._numAs2DigitHex(CssColor._clamp(r, 0, 255));
-    var gHex = CssColor._numAs2DigitHex(CssColor._clamp(g, 0, 255));
-    var bHex = CssColor._numAs2DigitHex(CssColor._clamp(b, 0, 255));
+  static String convertToHexString(int r, int g, int b, [num? a]) {
+    var rHex = Color._numAs2DigitHex(Color._clamp(r, 0, 255));
+    var gHex = Color._numAs2DigitHex(Color._clamp(g, 0, 255));
+    var bHex = Color._numAs2DigitHex(Color._clamp(b, 0, 255));
     var aHex = (a != null)
-        ? CssColor._numAs2DigitHex((CssColor._clamp(a, 0, 1) * 255).round())
+        ? Color._numAs2DigitHex((Color._clamp(a, 0, 1) * 255).round())
         : '';
 
     // TODO(terry) 15.toRadixString(16) return 'F' on Dartium not f as in JS.
@@ -298,7 +300,7 @@ class CssColor implements _StyleProperty, ColorBase {
     return hex;
   }
 
-  static num _clamp(num value, num min, num max) =>
+  static T _clamp<T extends num>(T value, T min, T max) =>
       math.max(math.min(max, value), min);
 
   /// Change the tint (make color lighter) or shade (make color darker) of all
@@ -312,20 +314,20 @@ class CssColor implements _StyleProperty, ColorBase {
   /// the color #ffffff (white).
   static Rgba _createNewTintShadeFromRgba(Rgba rgba, num amount) {
     int r, g, b;
-    var tintShade = CssColor._clamp(amount, -1, 1);
+    var tintShade = Color._clamp(amount, -1, 1);
     if (amount < 0 && rgba.r == 255 && rgba.g == 255 && rgba.b == 255) {
       // TODO(terry): See TODO in _changeTintShadeColor; eliminate this test
       //              by converting to HSL and adjust lightness although this
       //              is fastest lighter/darker algorithm.
       // Darkening white special handling.
-      r = CssColor._clamp((255 + (255 * tintShade)).round().toInt(), 0, 255);
-      g = CssColor._clamp((255 + (255 * tintShade)).round().toInt(), 0, 255);
-      b = CssColor._clamp((255 + (255 * tintShade)).round().toInt(), 0, 255);
+      r = Color._clamp((255 + (255 * tintShade)).round().toInt(), 0, 255);
+      g = Color._clamp((255 + (255 * tintShade)).round().toInt(), 0, 255);
+      b = Color._clamp((255 + (255 * tintShade)).round().toInt(), 0, 255);
     } else {
       // All other colors then darkening white go here.
-      r = CssColor._changeTintShadeColor(rgba.r, tintShade).round().toInt();
-      g = CssColor._changeTintShadeColor(rgba.g, tintShade).round().toInt();
-      b = CssColor._changeTintShadeColor(rgba.b, tintShade).round().toInt();
+      r = Color._changeTintShadeColor(rgba.r, tintShade).round().toInt();
+      g = Color._changeTintShadeColor(rgba.g, tintShade).round().toInt();
+      b = Color._changeTintShadeColor(rgba.b, tintShade).round().toInt();
     }
     return Rgba(r, g, b, rgba.a);
   }
@@ -337,157 +339,157 @@ class CssColor implements _StyleProperty, ColorBase {
   /// between '-1' and '0' is darker and a value between '0' and '1' is lighter
   /// ('0' imples no change).
   static num _changeTintShadeColor(num v, num delta) =>
-      CssColor._clamp(((1 - delta) * v + (delta * 255)).round(), 0, 255);
+      Color._clamp(((1 - delta) * v + (delta * 255)).round(), 0, 255);
 
   // Predefined CSS colors see <http://www.w3.org/TR/css3-color/>
-  static final CssColor transparent = const CssColor.hex('00ffffff'); // Alpha 0.0
-  static final CssColor aliceBlue = const CssColor.hex('0f08ff');
-  static final CssColor antiqueWhite = const CssColor.hex('0faebd7');
-  static final CssColor aqua = const CssColor.hex('00ffff');
-  static final CssColor aquaMarine = const CssColor.hex('7fffd4');
-  static final CssColor azure = const CssColor.hex('f0ffff');
-  static final CssColor beige = const CssColor.hex('f5f5dc');
-  static final CssColor bisque = const CssColor.hex('ffe4c4');
-  static final CssColor black = const CssColor.hex('000000');
-  static final CssColor blanchedAlmond = const CssColor.hex('ffebcd');
-  static final CssColor blue = const CssColor.hex('0000ff');
-  static final CssColor blueViolet = const CssColor.hex('8a2be2');
-  static final CssColor brown = const CssColor.hex('a52a2a');
-  static final CssColor burlyWood = const CssColor.hex('deb887');
-  static final CssColor cadetBlue = const CssColor.hex('5f9ea0');
-  static final CssColor chartreuse = const CssColor.hex('7fff00');
-  static final CssColor chocolate = const CssColor.hex('d2691e');
-  static final CssColor coral = const CssColor.hex('ff7f50');
-  static final CssColor cornFlowerBlue = const CssColor.hex('6495ed');
-  static final CssColor cornSilk = const CssColor.hex('fff8dc');
-  static final CssColor crimson = const CssColor.hex('dc143c');
-  static final CssColor cyan = const CssColor.hex('00ffff');
-  static final CssColor darkBlue = const CssColor.hex('00008b');
-  static final CssColor darkCyan = const CssColor.hex('008b8b');
-  static final CssColor darkGoldenRod = const CssColor.hex('b8860b');
-  static final CssColor darkGray = const CssColor.hex('a9a9a9');
-  static final CssColor darkGreen = const CssColor.hex('006400');
-  static final CssColor darkGrey = const CssColor.hex('a9a9a9');
-  static final CssColor darkKhaki = const CssColor.hex('bdb76b');
-  static final CssColor darkMagenta = const CssColor.hex('8b008b');
-  static final CssColor darkOliveGreen = const CssColor.hex('556b2f');
-  static final CssColor darkOrange = const CssColor.hex('ff8c00');
-  static final CssColor darkOrchid = const CssColor.hex('9932cc');
-  static final CssColor darkRed = const CssColor.hex('8b0000');
-  static final CssColor darkSalmon = const CssColor.hex('e9967a');
-  static final CssColor darkSeaGreen = const CssColor.hex('8fbc8f');
-  static final CssColor darkSlateBlue = const CssColor.hex('483d8b');
-  static final CssColor darkSlateGray = const CssColor.hex('2f4f4f');
-  static final CssColor darkSlateGrey = const CssColor.hex('2f4f4f');
-  static final CssColor darkTurquoise = const CssColor.hex('00ced1');
-  static final CssColor darkViolet = const CssColor.hex('9400d3');
-  static final CssColor deepPink = const CssColor.hex('ff1493');
-  static final CssColor deepSkyBlue = const CssColor.hex('00bfff');
-  static final CssColor dimGray = const CssColor.hex('696969');
-  static final CssColor dimGrey = const CssColor.hex('696969');
-  static final CssColor dodgerBlue = const CssColor.hex('1e90ff');
-  static final CssColor fireBrick = const CssColor.hex('b22222');
-  static final CssColor floralWhite = const CssColor.hex('fffaf0');
-  static final CssColor forestGreen = const CssColor.hex('228b22');
-  static final CssColor fuchsia = const CssColor.hex('ff00ff');
-  static final CssColor gainsboro = const CssColor.hex('dcdcdc');
-  static final CssColor ghostWhite = const CssColor.hex('f8f8ff');
-  static final CssColor gold = const CssColor.hex('ffd700');
-  static final CssColor goldenRod = const CssColor.hex('daa520');
-  static final CssColor gray = const CssColor.hex('808080');
-  static final CssColor green = const CssColor.hex('008000');
-  static final CssColor greenYellow = const CssColor.hex('adff2f');
-  static final CssColor grey = const CssColor.hex('808080');
-  static final CssColor honeydew = const CssColor.hex('f0fff0');
-  static final CssColor hotPink = const CssColor.hex('ff69b4');
-  static final CssColor indianRed = const CssColor.hex('cd5c5c');
-  static final CssColor indigo = const CssColor.hex('4b0082');
-  static final CssColor ivory = const CssColor.hex('fffff0');
-  static final CssColor khaki = const CssColor.hex('f0e68c');
-  static final CssColor lavender = const CssColor.hex('e6e6fa');
-  static final CssColor lavenderBlush = const CssColor.hex('fff0f5');
-  static final CssColor lawnGreen = const CssColor.hex('7cfc00');
-  static final CssColor lemonChiffon = const CssColor.hex('fffacd');
-  static final CssColor lightBlue = const CssColor.hex('add8e6');
-  static final CssColor lightCoral = const CssColor.hex('f08080');
-  static final CssColor lightCyan = const CssColor.hex('e0ffff');
-  static final CssColor lightGoldenRodYellow = const CssColor.hex('fafad2');
-  static final CssColor lightGray = const CssColor.hex('d3d3d3');
-  static final CssColor lightGreen = const CssColor.hex('90ee90');
-  static final CssColor lightGrey = const CssColor.hex('d3d3d3');
-  static final CssColor lightPink = const CssColor.hex('ffb6c1');
-  static final CssColor lightSalmon = const CssColor.hex('ffa07a');
-  static final CssColor lightSeaGreen = const CssColor.hex('20b2aa');
-  static final CssColor lightSkyBlue = const CssColor.hex('87cefa');
-  static final CssColor lightSlateGray = const CssColor.hex('778899');
-  static final CssColor lightSlateGrey = const CssColor.hex('778899');
-  static final CssColor lightSteelBlue = const CssColor.hex('b0c4de');
-  static final CssColor lightYellow = const CssColor.hex('ffffe0');
-  static final CssColor lime = const CssColor.hex('00ff00');
-  static final CssColor limeGreen = const CssColor.hex('32cd32');
-  static final CssColor linen = const CssColor.hex('faf0e6');
-  static final CssColor magenta = const CssColor.hex('ff00ff');
-  static final CssColor maroon = const CssColor.hex('800000');
-  static final CssColor mediumAquaMarine = const CssColor.hex('66cdaa');
-  static final CssColor mediumBlue = const CssColor.hex('0000cd');
-  static final CssColor mediumOrchid = const CssColor.hex('ba55d3');
-  static final CssColor mediumPurple = const CssColor.hex('9370db');
-  static final CssColor mediumSeaGreen = const CssColor.hex('3cb371');
-  static final CssColor mediumSlateBlue = const CssColor.hex('7b68ee');
-  static final CssColor mediumSpringGreen = const CssColor.hex('00fa9a');
-  static final CssColor mediumTurquoise = const CssColor.hex('48d1cc');
-  static final CssColor mediumVioletRed = const CssColor.hex('c71585');
-  static final CssColor midnightBlue = const CssColor.hex('191970');
-  static final CssColor mintCream = const CssColor.hex('f5fffa');
-  static final CssColor mistyRose = const CssColor.hex('ffe4e1');
-  static final CssColor moccasin = const CssColor.hex('ffe4b5');
-  static final CssColor navajoWhite = const CssColor.hex('ffdead');
-  static final CssColor navy = const CssColor.hex('000080');
-  static final CssColor oldLace = const CssColor.hex('fdf5e6');
-  static final CssColor olive = const CssColor.hex('808000');
-  static final CssColor oliveDrab = const CssColor.hex('6b8e23');
-  static final CssColor orange = const CssColor.hex('ffa500');
-  static final CssColor orangeRed = const CssColor.hex('ff4500');
-  static final CssColor orchid = const CssColor.hex('da70d6');
-  static final CssColor paleGoldenRod = const CssColor.hex('eee8aa');
-  static final CssColor paleGreen = const CssColor.hex('98fb98');
-  static final CssColor paleTurquoise = const CssColor.hex('afeeee');
-  static final CssColor paleVioletRed = const CssColor.hex('db7093');
-  static final CssColor papayaWhip = const CssColor.hex('ffefd5');
-  static final CssColor peachPuff = const CssColor.hex('ffdab9');
-  static final CssColor peru = const CssColor.hex('cd85ef');
-  static final CssColor pink = const CssColor.hex('ffc0cb');
-  static final CssColor plum = const CssColor.hex('dda0dd');
-  static final CssColor powderBlue = const CssColor.hex('b0e0e6');
-  static final CssColor purple = const CssColor.hex('800080');
-  static final CssColor red = const CssColor.hex('ff0000');
-  static final CssColor rosyBrown = const CssColor.hex('bc8f8f');
-  static final CssColor royalBlue = const CssColor.hex('4169e1');
-  static final CssColor saddleBrown = const CssColor.hex('8b4513');
-  static final CssColor salmon = const CssColor.hex('fa8072');
-  static final CssColor sandyBrown = const CssColor.hex('f4a460');
-  static final CssColor seaGreen = const CssColor.hex('2e8b57');
-  static final CssColor seashell = const CssColor.hex('fff5ee');
-  static final CssColor sienna = const CssColor.hex('a0522d');
-  static final CssColor silver = const CssColor.hex('c0c0c0');
-  static final CssColor skyBlue = const CssColor.hex('87ceeb');
-  static final CssColor slateBlue = const CssColor.hex('6a5acd');
-  static final CssColor slateGray = const CssColor.hex('708090');
-  static final CssColor slateGrey = const CssColor.hex('708090');
-  static final CssColor snow = const CssColor.hex('fffafa');
-  static final CssColor springGreen = const CssColor.hex('00ff7f');
-  static final CssColor steelBlue = const CssColor.hex('4682b4');
-  static final CssColor tan = const CssColor.hex('d2b48c');
-  static final CssColor teal = const CssColor.hex('008080');
-  static final CssColor thistle = const CssColor.hex('d8bfd8');
-  static final CssColor tomato = const CssColor.hex('ff6347');
-  static final CssColor turquoise = const CssColor.hex('40e0d0');
-  static final CssColor violet = const CssColor.hex('ee82ee');
-  static final CssColor wheat = const CssColor.hex('f5deb3');
-  static final CssColor white = const CssColor.hex('ffffff');
-  static final CssColor whiteSmoke = const CssColor.hex('f5f5f5');
-  static final CssColor yellow = const CssColor.hex('ffff00');
-  static final CssColor yellowGreen = const CssColor.hex('9acd32');
+  static final Color transparent = const Color.hex('00ffffff'); // Alpha 0.0
+  static final Color aliceBlue = const Color.hex('0f08ff');
+  static final Color antiqueWhite = const Color.hex('0faebd7');
+  static final Color aqua = const Color.hex('00ffff');
+  static final Color aquaMarine = const Color.hex('7fffd4');
+  static final Color azure = const Color.hex('f0ffff');
+  static final Color beige = const Color.hex('f5f5dc');
+  static final Color bisque = const Color.hex('ffe4c4');
+  static final Color black = const Color.hex('000000');
+  static final Color blanchedAlmond = const Color.hex('ffebcd');
+  static final Color blue = const Color.hex('0000ff');
+  static final Color blueViolet = const Color.hex('8a2be2');
+  static final Color brown = const Color.hex('a52a2a');
+  static final Color burlyWood = const Color.hex('deb887');
+  static final Color cadetBlue = const Color.hex('5f9ea0');
+  static final Color chartreuse = const Color.hex('7fff00');
+  static final Color chocolate = const Color.hex('d2691e');
+  static final Color coral = const Color.hex('ff7f50');
+  static final Color cornFlowerBlue = const Color.hex('6495ed');
+  static final Color cornSilk = const Color.hex('fff8dc');
+  static final Color crimson = const Color.hex('dc143c');
+  static final Color cyan = const Color.hex('00ffff');
+  static final Color darkBlue = const Color.hex('00008b');
+  static final Color darkCyan = const Color.hex('008b8b');
+  static final Color darkGoldenRod = const Color.hex('b8860b');
+  static final Color darkGray = const Color.hex('a9a9a9');
+  static final Color darkGreen = const Color.hex('006400');
+  static final Color darkGrey = const Color.hex('a9a9a9');
+  static final Color darkKhaki = const Color.hex('bdb76b');
+  static final Color darkMagenta = const Color.hex('8b008b');
+  static final Color darkOliveGreen = const Color.hex('556b2f');
+  static final Color darkOrange = const Color.hex('ff8c00');
+  static final Color darkOrchid = const Color.hex('9932cc');
+  static final Color darkRed = const Color.hex('8b0000');
+  static final Color darkSalmon = const Color.hex('e9967a');
+  static final Color darkSeaGreen = const Color.hex('8fbc8f');
+  static final Color darkSlateBlue = const Color.hex('483d8b');
+  static final Color darkSlateGray = const Color.hex('2f4f4f');
+  static final Color darkSlateGrey = const Color.hex('2f4f4f');
+  static final Color darkTurquoise = const Color.hex('00ced1');
+  static final Color darkViolet = const Color.hex('9400d3');
+  static final Color deepPink = const Color.hex('ff1493');
+  static final Color deepSkyBlue = const Color.hex('00bfff');
+  static final Color dimGray = const Color.hex('696969');
+  static final Color dimGrey = const Color.hex('696969');
+  static final Color dodgerBlue = const Color.hex('1e90ff');
+  static final Color fireBrick = const Color.hex('b22222');
+  static final Color floralWhite = const Color.hex('fffaf0');
+  static final Color forestGreen = const Color.hex('228b22');
+  static final Color fuchsia = const Color.hex('ff00ff');
+  static final Color gainsboro = const Color.hex('dcdcdc');
+  static final Color ghostWhite = const Color.hex('f8f8ff');
+  static final Color gold = const Color.hex('ffd700');
+  static final Color goldenRod = const Color.hex('daa520');
+  static final Color gray = const Color.hex('808080');
+  static final Color green = const Color.hex('008000');
+  static final Color greenYellow = const Color.hex('adff2f');
+  static final Color grey = const Color.hex('808080');
+  static final Color honeydew = const Color.hex('f0fff0');
+  static final Color hotPink = const Color.hex('ff69b4');
+  static final Color indianRed = const Color.hex('cd5c5c');
+  static final Color indigo = const Color.hex('4b0082');
+  static final Color ivory = const Color.hex('fffff0');
+  static final Color khaki = const Color.hex('f0e68c');
+  static final Color lavender = const Color.hex('e6e6fa');
+  static final Color lavenderBlush = const Color.hex('fff0f5');
+  static final Color lawnGreen = const Color.hex('7cfc00');
+  static final Color lemonChiffon = const Color.hex('fffacd');
+  static final Color lightBlue = const Color.hex('add8e6');
+  static final Color lightCoral = const Color.hex('f08080');
+  static final Color lightCyan = const Color.hex('e0ffff');
+  static final Color lightGoldenRodYellow = const Color.hex('fafad2');
+  static final Color lightGray = const Color.hex('d3d3d3');
+  static final Color lightGreen = const Color.hex('90ee90');
+  static final Color lightGrey = const Color.hex('d3d3d3');
+  static final Color lightPink = const Color.hex('ffb6c1');
+  static final Color lightSalmon = const Color.hex('ffa07a');
+  static final Color lightSeaGreen = const Color.hex('20b2aa');
+  static final Color lightSkyBlue = const Color.hex('87cefa');
+  static final Color lightSlateGray = const Color.hex('778899');
+  static final Color lightSlateGrey = const Color.hex('778899');
+  static final Color lightSteelBlue = const Color.hex('b0c4de');
+  static final Color lightYellow = const Color.hex('ffffe0');
+  static final Color lime = const Color.hex('00ff00');
+  static final Color limeGreen = const Color.hex('32cd32');
+  static final Color linen = const Color.hex('faf0e6');
+  static final Color magenta = const Color.hex('ff00ff');
+  static final Color maroon = const Color.hex('800000');
+  static final Color mediumAquaMarine = const Color.hex('66cdaa');
+  static final Color mediumBlue = const Color.hex('0000cd');
+  static final Color mediumOrchid = const Color.hex('ba55d3');
+  static final Color mediumPurple = const Color.hex('9370db');
+  static final Color mediumSeaGreen = const Color.hex('3cb371');
+  static final Color mediumSlateBlue = const Color.hex('7b68ee');
+  static final Color mediumSpringGreen = const Color.hex('00fa9a');
+  static final Color mediumTurquoise = const Color.hex('48d1cc');
+  static final Color mediumVioletRed = const Color.hex('c71585');
+  static final Color midnightBlue = const Color.hex('191970');
+  static final Color mintCream = const Color.hex('f5fffa');
+  static final Color mistyRose = const Color.hex('ffe4e1');
+  static final Color moccasin = const Color.hex('ffe4b5');
+  static final Color navajoWhite = const Color.hex('ffdead');
+  static final Color navy = const Color.hex('000080');
+  static final Color oldLace = const Color.hex('fdf5e6');
+  static final Color olive = const Color.hex('808000');
+  static final Color oliveDrab = const Color.hex('6b8e23');
+  static final Color orange = const Color.hex('ffa500');
+  static final Color orangeRed = const Color.hex('ff4500');
+  static final Color orchid = const Color.hex('da70d6');
+  static final Color paleGoldenRod = const Color.hex('eee8aa');
+  static final Color paleGreen = const Color.hex('98fb98');
+  static final Color paleTurquoise = const Color.hex('afeeee');
+  static final Color paleVioletRed = const Color.hex('db7093');
+  static final Color papayaWhip = const Color.hex('ffefd5');
+  static final Color peachPuff = const Color.hex('ffdab9');
+  static final Color peru = const Color.hex('cd85ef');
+  static final Color pink = const Color.hex('ffc0cb');
+  static final Color plum = const Color.hex('dda0dd');
+  static final Color powderBlue = const Color.hex('b0e0e6');
+  static final Color purple = const Color.hex('800080');
+  static final Color red = const Color.hex('ff0000');
+  static final Color rosyBrown = const Color.hex('bc8f8f');
+  static final Color royalBlue = const Color.hex('4169e1');
+  static final Color saddleBrown = const Color.hex('8b4513');
+  static final Color salmon = const Color.hex('fa8072');
+  static final Color sandyBrown = const Color.hex('f4a460');
+  static final Color seaGreen = const Color.hex('2e8b57');
+  static final Color seashell = const Color.hex('fff5ee');
+  static final Color sienna = const Color.hex('a0522d');
+  static final Color silver = const Color.hex('c0c0c0');
+  static final Color skyBlue = const Color.hex('87ceeb');
+  static final Color slateBlue = const Color.hex('6a5acd');
+  static final Color slateGray = const Color.hex('708090');
+  static final Color slateGrey = const Color.hex('708090');
+  static final Color snow = const Color.hex('fffafa');
+  static final Color springGreen = const Color.hex('00ff7f');
+  static final Color steelBlue = const Color.hex('4682b4');
+  static final Color tan = const Color.hex('d2b48c');
+  static final Color teal = const Color.hex('008080');
+  static final Color thistle = const Color.hex('d8bfd8');
+  static final Color tomato = const Color.hex('ff6347');
+  static final Color turquoise = const Color.hex('40e0d0');
+  static final Color violet = const Color.hex('ee82ee');
+  static final Color wheat = const Color.hex('f5deb3');
+  static final Color white = const Color.hex('ffffff');
+  static final Color whiteSmoke = const Color.hex('f5f5f5');
+  static final Color yellow = const Color.hex('ffff00');
+  static final Color yellowGreen = const Color.hex('9acd32');
 }
 
 /// Rgba class for users that want to interact with a color as a RGBA value.
@@ -497,18 +499,18 @@ class Rgba implements _StyleProperty, ColorBase {
   final int r;
   final int g;
   final int b;
-  final num a;
+  final num? a;
 
-  Rgba(int red, int green, int blue, [num alpha])
-      : r = CssColor._clamp(red, 0, 255),
-        g = CssColor._clamp(green, 0, 255),
-        b = CssColor._clamp(blue, 0, 255),
-        a = (alpha != null) ? CssColor._clamp(alpha, 0, 1) : alpha;
+  Rgba(int red, int green, int blue, [num? alpha])
+      : r = Color._clamp(red, 0, 255),
+        g = Color._clamp(green, 0, 255),
+        b = Color._clamp(blue, 0, 255),
+        a = (alpha != null) ? Color._clamp(alpha, 0, 1) : alpha;
 
   factory Rgba.fromString(String hexValue) =>
-      CssColor.css('#${CssColor._convertCssToArgb(hexValue)}').rgba;
+      Color.css('#${Color._convertCssToArgb(hexValue)}').rgba;
 
-  factory Rgba.fromColor(CssColor color) => color.rgba;
+  factory Rgba.fromColor(Color color) => color.rgba;
 
   factory Rgba.fromArgbValue(num value) {
     return Rgba(
@@ -579,25 +581,25 @@ class Rgba implements _StyleProperty, ColorBase {
   }
 
   @override
-  bool operator ==(other) => CssColor.equal(this, other);
+  bool operator ==(other) => Color.equal(this, other);
 
   @override
   String get cssExpression {
     if (a == null) {
-      return '#${CssColor.convertToHexString(r, g, b)}';
+      return '#${Color.convertToHexString(r, g, b)}';
     } else {
       return 'rgba($r,$g,$b,$a)';
     }
   }
 
   @override
-  String toHexArgbString() => CssColor.convertToHexString(r, g, b, a);
+  String toHexArgbString() => Color.convertToHexString(r, g, b, a);
 
   @override
   int get argbValue {
     var value = 0;
     if (a != null) {
-      value = ((a * 255).toInt() << 0x18);
+      value = (a!.toInt() << 0x18);
     }
     value += (r << 0x10);
     value += (g << 0x08);
@@ -605,11 +607,11 @@ class Rgba implements _StyleProperty, ColorBase {
     return value;
   }
 
-  CssColor get color => CssColor.createRgba(r, g, b, a);
+  Color get color => Color.createRgba(r, g, b, a);
   Hsla get hsla => Hsla.fromRgba(this);
 
-  Rgba darker(num amount) => CssColor._createNewTintShadeFromRgba(this, -amount);
-  Rgba lighter(num amount) => CssColor._createNewTintShadeFromRgba(this, amount);
+  Rgba darker(num amount) => Color._createNewTintShadeFromRgba(this, -amount);
+  Rgba lighter(num amount) => Color._createNewTintShadeFromRgba(this, amount);
 
   @override
   int get hashCode => toHexArgbString().hashCode;
@@ -623,24 +625,24 @@ class Hsla implements _StyleProperty, ColorBase {
   final num _h; // Value from 0..1
   final num _s; // Value from 0..1
   final num _l; // Value from 0..1
-  final num _a; // Value from 0..1
+  final num? _a; // Value from 0..1
 
   /// [hue] is a 0..1 fraction of 360 degrees (360 == 0).
   /// [saturation] is a 0..1 fraction (100% == 1).
   /// [lightness] is a 0..1 fraction (100% == 1).
   /// [alpha] is a 0..1 fraction, alpha blending between 0..1, 1 == 100% opaque.
-  Hsla(num hue, num saturation, num lightness, [num alpha])
-      : _h = (hue == 1) ? 0 : CssColor._clamp(hue, 0, 1),
-        _s = CssColor._clamp(saturation, 0, 1),
-        _l = CssColor._clamp(lightness, 0, 1),
-        _a = (alpha != null) ? CssColor._clamp(alpha, 0, 1) : alpha;
+  Hsla(num hue, num saturation, num lightness, [num? alpha])
+      : _h = (hue == 1) ? 0 : Color._clamp(hue, 0, 1),
+        _s = Color._clamp(saturation, 0, 1),
+        _l = Color._clamp(lightness, 0, 1),
+        _a = (alpha != null) ? Color._clamp(alpha, 0, 1) : alpha;
 
   factory Hsla.fromString(String hexValue) {
-    var rgba = CssColor.css('#${CssColor._convertCssToArgb(hexValue)}').rgba;
+    var rgba = Color.css('#${Color._convertCssToArgb(hexValue)}').rgba;
     return _createFromRgba(rgba.r, rgba.g, rgba.b, rgba.a);
   }
 
-  factory Hsla.fromColor(CssColor color) {
+  factory Hsla.fromColor(Color color) {
     var rgba = color.rgba;
     return _createFromRgba(rgba.r, rgba.g, rgba.b, rgba.a);
   }
@@ -652,9 +654,7 @@ class Hsla implements _StyleProperty, ColorBase {
     var b = value.toInt() & 0xff;
 
     // Convert alpha to 0..1 from (0..255).
-    if (a != null) {
-      a = double.parse((a / 255).toStringAsPrecision(2));
-    }
+    a = double.parse((a / 255).toStringAsPrecision(2));
 
     return _createFromRgba(r, g, b, a);
   }
@@ -662,7 +662,7 @@ class Hsla implements _StyleProperty, ColorBase {
   factory Hsla.fromRgba(Rgba rgba) =>
       _createFromRgba(rgba.r, rgba.g, rgba.b, rgba.a);
 
-  static Hsla _createFromRgba(num r, num g, num b, num a) {
+  static Hsla _createFromRgba(num r, num g, num b, num? a) {
     // Convert RGB to hsl.
     // See site <http://easyrgb.com/index.php?X=MATH> for good documentation
     // and color conversion routines.
@@ -725,10 +725,10 @@ class Hsla implements _StyleProperty, ColorBase {
   num get lightnessPercentage => (_l * 100).round();
 
   /// Returns number as 0..1
-  num get alpha => _a;
+  num? get alpha => _a;
 
   @override
-  bool operator ==(other) => CssColor.equal(this, other);
+  bool operator ==(other) => Color.equal(this, other);
 
   @override
   String get cssExpression => (_a == null)
@@ -739,9 +739,9 @@ class Hsla implements _StyleProperty, ColorBase {
   String toHexArgbString() => Rgba.fromHsla(this).toHexArgbString();
 
   @override
-  int get argbValue => CssColor.hexToInt(toHexArgbString());
+  int get argbValue => Color.hexToInt(toHexArgbString());
 
-  CssColor get color => CssColor.createHsla(_h, _s, _l, _a);
+  Color get color => Color.createHsla(_h, _s, _l, _a);
   Rgba get rgba => Rgba.fromHsla(this);
 
   Hsla darker(num amount) => Hsla.fromRgba(Rgba.fromHsla(this).darker(amount));
@@ -759,7 +759,7 @@ class PointXY implements _StyleProperty {
   const PointXY(this.x, this.y);
 
   @override
-  String get cssExpression {
+  String? get cssExpression {
     // TODO(terry): TBD
     return null;
   }
@@ -768,7 +768,7 @@ class PointXY implements _StyleProperty {
 // TODO(terry): Implement style and color.
 /// Supports border for measuring with layout.
 class Border implements _StyleProperty {
-  final int top, left, bottom, right;
+  final int? top, left, bottom, right;
 
   // TODO(terry): Just like CSS, 1-arg -> set all properties, 2-args -> top and
   //               bottom are first arg, left and right are second, 3-args, and
@@ -776,14 +776,14 @@ class Border implements _StyleProperty {
   const Border([this.top, this.left, this.bottom, this.right]);
 
   // TODO(terry): Consider using Size or width and height.
-  Border.uniform(num amount)
+  Border.uniform(int amount)
       : top = amount,
         left = amount,
         bottom = amount,
         right = amount;
 
-  int get width => left + right;
-  int get height => top + bottom;
+  int get width => left! + right!;
+  int get height => top! + bottom!;
 
   @override
   String get cssExpression {
@@ -967,7 +967,7 @@ class Font implements _StyleProperty {
   // TODO(terry): Should support the values xx-small, small, large, xx-large,
   //              etc. (mapped to a pixel sized font)?
   /// Font size in pixels.
-  final Dimen size;
+  final Dimen? size;
 
   // TODO(terry): _family should be an immutable list, wrapper class to do this
   //              should exist in Dart.
@@ -975,20 +975,20 @@ class Font implements _StyleProperty {
   /// the first known/supported font.  There are two types of font families the
   /// family-name (e.g., arial, times, courier, etc) or the generic-family
   /// (e.g., serif, sans-seric, etc.)
-  final List<String> family;
+  final List<String>? family;
 
   /// Font weight from 100, 200, 300, 400, 500, 600, 700, 800, 900
-  final FontWeight weight;
+  final FontWeight? weight;
 
   /// Style of a font normal, italic, oblique.
-  final FontStyle style;
+  final FontStyle? style;
 
   /// Font variant NORMAL (default) or SMALL_CAPS.  Different set of font glyph
   /// lower case letters designed to have to fit within the font-height and
   /// weight of the corresponding lowercase letters.
-  final String variant;
+  final String? variant;
 
-  final Dimen lineHeight;
+  final Dimen? lineHeight;
 
   // TODO(terry): Size and computedLineHeight are in pixels.  Need to figure out
   //              how to handle in other units (specified in other units) like
@@ -1013,9 +1013,9 @@ class Font implements _StyleProperty {
       this.variant,
       this.lineHeight});
 
-  /// Merge the two fonts and return the result. See [merge] for
+  /// Merge the two fonts and return the result. See [Style.merge] for
   /// more information.
-  factory Font.merge(Font a, Font b) {
+  static Font? merge(Font? a, Font? b) {
     if (a == null) return b;
     if (b == null) return a;
     return Font._merge(a, b);
@@ -1041,16 +1041,16 @@ class Font implements _StyleProperty {
     if (weight != null) {
       // TODO(jacobr): is this really correct for lineHeight?
       if (lineHeight != null) {
-        return '$weight ${size.size}${size.unit}/${lineHeight.size}${lineHeight.unit} $fontsAsString';
+        return '$weight ${size}px/${lineHeight?.size}${lineHeight?.unit} $fontsAsString';
       }
-      return '$weight ${size.size}${size.unit} $fontsAsString';
+      return '$weight ${size}px $fontsAsString';
     }
 
     return '${size}px $fontsAsString';
   }
 
   Font scale(num ratio) => Font(
-      size: size * ratio,
+      size: size! * ratio,
       family: family,
       weight: weight,
       style: style,
@@ -1059,50 +1059,50 @@ class Font implements _StyleProperty {
   @override
   int get hashCode {
     // TODO(jimhug): Lot's of potential collisions here. List of fonts, etc.
-    return size.size.hashCode % size.unit.hashCode % family[0].hashCode;
+    return size!.size.toInt() % family![0].hashCode;
   }
 
   @override
   bool operator ==(other) {
     if (other is! Font) return false;
-    Font o = other;
-    return o.size == size &&
-        o.family == family &&
-        o.weight == weight &&
-        o.lineHeight == lineHeight &&
-        o.style == style &&
-        o.variant == variant;
+    return other.size == size &&
+        other.family == family &&
+        other.weight == weight &&
+        other.lineHeight == lineHeight &&
+        other.style == style &&
+        other.variant == variant;
   }
 
   // TODO(terry): This is fragile should probably just iterate through the list
   //              of fonts construction the font-family string.
   /// Return fonts as a comma seperated list sans the square brackets.
   String get fontsAsString {
-    return family == null ? '' : family.join(',');
+    var fonts = family.toString();
+    return fonts.length > 2 ? fonts.substring(1, fonts.length - 1) : '';
   }
 }
 
 /// This class stores the sizes of the box edges in the CSS [box model][]. Each
 /// edge area is placed around the sides of the content box. The innermost area
-/// is the [padding] area which has a background and surrounds the
-/// content.  The content and padding area is surrounded by the [border],
-/// which itself is surrounded by the transparent [margin]. This box
+/// is the [Style.padding] area which has a background and surrounds the
+/// content.  The content and padding area is surrounded by the [Style.border],
+/// which itself is surrounded by the transparent [Style.margin]. This box
 /// represents the eges of padding, border, or margin depending on which
 /// accessor was used to retrieve it.
 ///
 /// [box model]: https://developer.mozilla.org/en/CSS/box_model
 class BoxEdge {
   /// The size of the left edge, or null if the style has no edge.
-  final num left;
+  final num? left;
 
   /// The size of the top edge, or null if the style has no edge.
-  final num top;
+  final num? top;
 
   /// The size of the right edge, or null if the style has no edge.
-  final num right;
+  final num? right;
 
   /// The size of the bottom edge, or null if the style has no edge.
-  final num bottom;
+  final num? bottom;
 
   /// Creates a box edge with the specified [left], [top], [right], and
   /// [bottom] width.
@@ -1125,7 +1125,7 @@ class BoxEdge {
 
   /// Takes a possibly null box edge, with possibly null metrics, and fills
   /// them in with 0 instead.
-  factory BoxEdge.nonNull(BoxEdge other) {
+  factory BoxEdge.nonNull(BoxEdge? other) {
     if (other == null) return const BoxEdge(0, 0, 0, 0);
     var left = other.left;
     var top = other.top;
@@ -1151,9 +1151,9 @@ class BoxEdge {
     return make ? BoxEdge(left, top, right, bottom) : other;
   }
 
-  /// Merge the two box edge sizes and return the result. See [merge] for
+  /// Merge the two box edge sizes and return the result. See [Style.merge] for
   /// more information.
-  factory BoxEdge.merge(BoxEdge x, BoxEdge y) {
+  static BoxEdge? merge(BoxEdge? x, BoxEdge? y) {
     if (x == null) return y;
     if (y == null) return x;
     return BoxEdge._merge(x, y);

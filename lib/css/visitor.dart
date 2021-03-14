@@ -6,6 +6,7 @@ import 'dart:ui';
 
 import 'package:megami/megami.dart';
 import 'package:source_span/source_span.dart';
+
 import 'parser.dart';
 
 part 'src/tree.dart';
@@ -176,13 +177,13 @@ class Visitor implements VisitorBase {
 
   @override
   dynamic visitSupportsDirective(SupportsDirective node) {
-    node.condition.visit(this);
+    node.condition!.visit(this);
     _visitNodeList(node.groupRuleBody);
   }
 
   @override
   dynamic visitSupportsConditionInParens(SupportsConditionInParens node) {
-    node.condition.visit(this);
+    node.condition!.visit(this);
   }
 
   @override
@@ -239,7 +240,7 @@ class Visitor implements VisitorBase {
 
   @override
   dynamic visitKeyFrameDirective(KeyFrameDirective node) {
-    visitIdentifier(node.name);
+    visitIdentifier(node.name!);
     _visitNodeList(node._blocks);
   }
 
@@ -295,8 +296,8 @@ class Visitor implements VisitorBase {
 
   @override
   dynamic visitRuleSet(RuleSet node) {
-    visitSelectorGroup(node._selectorGroup);
-    visitDeclarationGroup(node._declarationGroup);
+    visitSelectorGroup(node.selectorGroup!);
+    visitDeclarationGroup(node.declarationGroup);
   }
 
   @override
@@ -309,14 +310,14 @@ class Visitor implements VisitorBase {
 
   @override
   dynamic visitDeclaration(Declaration node) {
-    visitIdentifier(node._property);
-    if (node._expression != null) node._expression.visit(this);
+    visitIdentifier(node._property!);
+    if (node.expression != null) node.expression!.visit(this);
   }
 
   @override
   dynamic visitVarDefinition(VarDefinition node) {
-    visitIdentifier(node._property);
-    if (node._expression != null) node._expression.visit(this);
+    visitIdentifier(node._property!);
+    if (node.expression != null) node.expression!.visit(this);
   }
 
   @override
@@ -351,7 +352,7 @@ class Visitor implements VisitorBase {
   dynamic visitNamespaceSelector(NamespaceSelector node) {
     if (node._namespace != null) node._namespace.visit(this);
     if (node.nameAsSimpleSelector != null) {
-      node.nameAsSimpleSelector.visit(this);
+      node.nameAsSimpleSelector!.visit(this);
     }
   }
 

@@ -9,7 +9,7 @@ extension _SelectorExt on Selector {
       strict = previousValue == selector ||
           element.isCombinatorGreater ||
           element.isCombinatorPlus;
-      var matched = element.match(previousValue, strict);
+      var matched = element.match(previousValue as _SelectorSection, strict);
       return matched;
     });
     return matched != null;
@@ -24,15 +24,15 @@ extension _SelectorExt on Selector {
 }
 
 extension _SelectorSequenceExt on SimpleSelectorSequence {
-  _SelectorSection match(_SelectorSection selector, bool strict) {
+  _SelectorSection? match(_SelectorSection? selector, bool strict) {
     var matched = selector?.sections
-            ?.any((element) => simpleSelector.match(element, selector.index)) ??
+            .any((element) => simpleSelector.match(element, selector.index)) ??
         false;
     if (matched) {
-      if (isCombinatorGreater || isCombinatorDescendant) return selector.parent;
-      if (isCombinatorPlus) return selector.index > 0 ? selector : null;
+      if (isCombinatorGreater || isCombinatorDescendant) return selector!.parent;
+      if (isCombinatorPlus) return selector!.index > 0 ? selector : null;
       return selector;
-    } else if (!strict && selector.parent != null) {
+    } else if (!strict && selector!.parent != null) {
       return match(selector.parent, strict);
     }
     return null;
@@ -140,22 +140,22 @@ extension _ExpressionExt on Expression {
 
 extension _TextExt on Text {
   Text copy({
-    String data,
-    TextStyle style,
-    StrutStyle strutStyle,
-    TextAlign textAlign,
-    TextDirection textDirection,
-    Locale locale,
-    bool softWrap,
-    TextOverflow overflow,
-    double textScaleFactor,
-    int maxLines,
-    String semanticsLabel,
-    TextWidthBasis textWidthBasis,
-    TextHeightBehavior textHeightBehavior,
+    String? data,
+    TextStyle? style,
+    StrutStyle? strutStyle,
+    TextAlign? textAlign,
+    TextDirection? textDirection,
+    Locale? locale,
+    bool? softWrap,
+    TextOverflow? overflow,
+    double? textScaleFactor,
+    int? maxLines,
+    String? semanticsLabel,
+    TextWidthBasis? textWidthBasis,
+    TextHeightBehavior? textHeightBehavior,
   }) =>
       Text(
-        data ?? this.data,
+        data ?? this.data!,
         style: style ?? this.style,
         strutStyle: strutStyle ?? this.strutStyle,
         textAlign: textAlign ?? this.textAlign,
@@ -173,57 +173,56 @@ extension _TextExt on Text {
 
 extension _TextFieldExt on TextField {
   TextField copy(
-          {TextEditingController controller,
-          FocusNode focusNode,
-          InputDecoration decoration,
-          TextInputType keyboardType,
-          TextInputAction textInputAction,
-          TextCapitalization textCapitalization,
-          TextStyle style,
-          StrutStyle strutStyle,
-          TextAlign textAlign,
-          TextAlignVertical textAlignVertical,
-          TextDirection textDirection,
-          bool readOnly,
-          ToolbarOptions toolbarOptions,
-          bool showCursor,
-          bool autofocus,
-          String obscuringCharacter,
-          bool obscureText,
-          bool autocorrect,
-          SmartDashesType smartDashesType,
-          SmartQuotesType smartQuotesType,
-          bool enableSuggestions,
-          int maxLines,
-          int minLines,
-          bool expands,
-          int maxLength,
-          bool maxLengthEnforced,
-          void Function(String) onChanged,
-          void Function() onEditingComplete,
-          void Function(String) onSubmitted,
-          void Function(String, Map<String, dynamic>) onAppPrivateCommand,
-          List<TextInputFormatter> inputFormatters,
-          bool enabled,
-          double cursorWidth,
-          double cursorHeight,
-          Radius cursorRadius,
-          Color cursorColor,
-          ui.BoxHeightStyle selectionHeightStyle,
-          ui.BoxWidthStyle selectionWidthStyle,
-          Brightness keyboardAppearance,
-          EdgeInsets scrollPadding,
-          DragStartBehavior dragStartBehavior,
-          bool enableInteractiveSelection,
-          void Function() onTap,
-          MouseCursor mouseCursor,
-          Widget Function(BuildContext,
-                  {int currentLength, bool isFocused, int maxLength})
-              buildCounter,
-          ScrollController scrollController,
-          ScrollPhysics scrollPhysics,
-          Iterable<String> autofillHints,
-          String restorationId}) =>
+          {TextEditingController? controller,
+          FocusNode? focusNode,
+          InputDecoration? decoration,
+          TextInputType? keyboardType,
+          TextInputAction? textInputAction,
+          TextCapitalization? textCapitalization,
+          TextStyle? style,
+          StrutStyle? strutStyle,
+          TextAlign? textAlign,
+          TextAlignVertical? textAlignVertical,
+          TextDirection? textDirection,
+          bool? readOnly,
+          ToolbarOptions? toolbarOptions,
+          bool? showCursor,
+          bool? autofocus,
+          String? obscuringCharacter,
+          bool? obscureText,
+          bool? autocorrect,
+          SmartDashesType? smartDashesType,
+          SmartQuotesType? smartQuotesType,
+          bool? enableSuggestions,
+          int? maxLines,
+          int? minLines,
+          bool? expands,
+          int? maxLength,
+          bool? maxLengthEnforced,
+          void Function(String)? onChanged,
+          void Function()? onEditingComplete,
+          void Function(String)? onSubmitted,
+          void Function(String, Map<String, dynamic>)? onAppPrivateCommand,
+          List<TextInputFormatter>? inputFormatters,
+          bool? enabled,
+          double? cursorWidth,
+          double? cursorHeight,
+          Radius? cursorRadius,
+          Color? cursorColor,
+          ui.BoxHeightStyle? selectionHeightStyle,
+          ui.BoxWidthStyle? selectionWidthStyle,
+          Brightness? keyboardAppearance,
+          EdgeInsets? scrollPadding,
+          DragStartBehavior? dragStartBehavior,
+          bool? enableInteractiveSelection,
+          TextSelectionControls? selectionControls,
+          void Function()? onTap,
+          MouseCursor? mouseCursor,
+          InputCounterWidgetBuilder? buildCounter,
+          ScrollController? scrollController,
+          ScrollPhysics? scrollPhysics,
+          Iterable<String>? autofillHints,
+          String? restorationId}) =>
       TextField(
         controller: controller ?? this.controller,
         focusNode: focusNode ?? this.focusNode,
@@ -268,6 +267,7 @@ extension _TextFieldExt on TextField {
         dragStartBehavior: dragStartBehavior ?? this.dragStartBehavior,
         enableInteractiveSelection:
             enableInteractiveSelection ?? this.enableInteractiveSelection,
+        selectionControls: selectionControls ?? this.selectionControls,
         onTap: onTap ?? this.onTap,
         mouseCursor: mouseCursor ?? this.mouseCursor,
         buildCounter: buildCounter ?? this.buildCounter,
@@ -280,23 +280,25 @@ extension _TextFieldExt on TextField {
 
 extension TabBarExt on TabBar {
   TabBar copy({
-    List<Widget> tabs,
-    TabController controller,
-    bool isScrollable,
-    Color indicatorColor,
-    double indicatorWeight,
-    EdgeInsetsGeometry indicatorPadding,
-    Decoration indicator,
-    TabBarIndicatorSize indicatorSize,
-    Color labelColor,
-    TextStyle labelStyle,
-    EdgeInsetsGeometry labelPadding,
-    Color unselectedLabelColor,
-    TextStyle unselectedLabelStyle,
-    DragStartBehavior dragStartBehavior,
-    MouseCursor mouseCursor,
-    ValueChanged<int> onTap,
-    ScrollPhysics physics,
+    List<Widget>? tabs,
+    TabController? controller,
+    bool? isScrollable,
+    Color? indicatorColor,
+    double? indicatorWeight,
+    EdgeInsetsGeometry? indicatorPadding,
+    Decoration? indicator,
+    TabBarIndicatorSize? indicatorSize,
+    Color? labelColor,
+    TextStyle? labelStyle,
+    EdgeInsetsGeometry? labelPadding,
+    Color? unselectedLabelColor,
+    TextStyle? unselectedLabelStyle,
+    DragStartBehavior? dragStartBehavior,
+    MaterialStateProperty<Color?>? overlayColor,
+    MouseCursor? mouseCursor,
+    bool? enableFeedback,
+    ValueChanged<int>? onTap,
+    ScrollPhysics? physics,
   }) =>
       TabBar(
         tabs: tabs ?? this.tabs,
@@ -313,7 +315,9 @@ extension TabBarExt on TabBar {
         unselectedLabelColor: unselectedLabelColor ?? this.unselectedLabelColor,
         unselectedLabelStyle: unselectedLabelStyle ?? this.unselectedLabelStyle,
         dragStartBehavior: dragStartBehavior ?? this.dragStartBehavior,
+        overlayColor: overlayColor ?? this.overlayColor,
         mouseCursor: mouseCursor ?? this.mouseCursor,
+        enableFeedback: enableFeedback ?? this.enableFeedback,
         onTap: onTap ?? this.onTap,
         physics: physics ?? this.physics,
       );
@@ -326,7 +330,7 @@ Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
       var type = _StyleComponent.typeOf(declaration);
       if (type != null) {
         var component =
-            previousValue.putIfAbsent(type, () => _StyleComponent.create(type));
+            previousValue.putIfAbsent(type, () => _StyleComponent.create(type)!);
         component.merge(declaration, basePath: group.basePath);
       }
     });
@@ -350,7 +354,7 @@ extension StyleExt on Widget {
             );
     }
     if (selectors is List) {
-      var section = _SelectorSection(sections: selectors, index: index);
+      var section = _SelectorSection(sections: selectors as List<String>, index: index);
       return this is PreferredSizeWidget
           ? _PreferredSizeStyle(
               sizeProvider: () => (this as PreferredSizeWidget).preferredSize,
@@ -383,13 +387,13 @@ enum TextStyleType {
 }
 
 extension BuildContextExt on BuildContext {
-  Widget styledText(
+  Widget? styledText(
       dynamic selectors,
       {int index = 0,
       TextStyleType defaultStyleType = TextStyleType.BODY1,
-      @required
-          Widget Function(BuildContext context, TextStyle textStyle,
-                  TextAlign textAlign)
+      required
+          Widget Function(BuildContext context, TextStyle? textStyle,
+                  TextAlign? textAlign)
               builder}) {
     var defaultTextStyle = _textStyleFromType(defaultStyleType);
     if (selectors is String) {
@@ -401,7 +405,7 @@ extension BuildContextExt on BuildContext {
       );
     }
     if (selectors is List) {
-      var section = _SelectorSection(sections: selectors, index: index);
+      var section = _SelectorSection(sections: selectors as List<String>, index: index);
       return _TextStyleWrapper(
         selector: section,
         defaultStyle: defaultTextStyle,
@@ -411,7 +415,7 @@ extension BuildContextExt on BuildContext {
     return null;
   }
 
-  TextStyle _textStyleFromType(TextStyleType type) {
+  TextStyle? _textStyleFromType(TextStyleType? type) {
     var textTheme = Theme.of(this).textTheme;
     switch (type) {
       case TextStyleType.BODY1:
@@ -446,27 +450,8 @@ extension BuildContextExt on BuildContext {
   }
 }
 
-extension IterableExt<E> on Iterable<E> {
-  E get firstOrNull {
-    if (isEmpty) return null;
-    return first;
-  }
-
-  E get lastOrNull {
-    if (isEmpty) return null;
-    return last;
-  }
-
-  E firstWhereOrNull(bool Function(E element) test) {
-    for (var element in this) {
-      if (test(element)) return element;
-    }
-    return null;
-  }
-}
-
 extension UriExt on Uri {
-  Uri toAbsolute({String basePath = ''}) {
+  Uri? toAbsolute({String basePath = ''}) {
     switch (scheme) {
       case 'http':
       case 'https':
@@ -474,12 +459,12 @@ extension UriExt on Uri {
       case 'asset':
         return this;
       default:
-        return Uri.tryParse('${basePath}/${toString()}');
+        return Uri.tryParse('$basePath/${toString()}');
     }
   }
 
-  ImageProvider toImage() {
-    ImageProvider provider;
+  ImageProvider? toImage() {
+    ImageProvider? provider;
     switch (scheme) {
       case 'http':
       case 'https':

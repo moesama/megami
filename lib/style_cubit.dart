@@ -22,7 +22,7 @@ class CssBundle {
 }
 
 class StyleCubit extends Cubit<List<StyleSheet>> {
-  StyleCubit({List<StyleSheet> state}) : super(state);
+  StyleCubit({List<StyleSheet> state = const []}) : super(state);
 
   void addStyle(String key, String style, {String basePath = ''}) {
     final list = _addStyle(key, style, origin: state, basePath: basePath);
@@ -30,8 +30,8 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
   }
 
   void removeStyle(String key) {
-    final list = state?.toList(growable: true);
-    list?.removeWhere((element) => element.key == key);
+    final list = state.toList(growable: true);
+    list.removeWhere((element) => element.key == key);
     _notifyChanged(list);
   }
 
@@ -52,7 +52,7 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
     });
   }
 
-  List<StyleSheet> _addStyle(String key, String style, {List<StyleSheet> origin, String basePath = ''}) {
+  List<StyleSheet> _addStyle(String key, String style, {List<StyleSheet>? origin, String basePath = ''}) {
     final stylesheet = parse(style)
       ..basePath = basePath
       ..key = key;

@@ -3,6 +3,9 @@
 // BSD-style license that can be found in the LICENSE file.
 
 class PreprocessorOptions {
+  /// Generate polyfill code (e.g., var, etc.)
+  final bool polyfill;
+
   /// Report warnings as errors.
   final bool warningsAsErrors;
 
@@ -29,7 +32,7 @@ class PreprocessorOptions {
   final bool useColors;
 
   /// File to process by the compiler.
-  final String inputFile;
+  final String? inputFile;
 
   const PreprocessorOptions(
       {this.verbose = false,
@@ -39,5 +42,6 @@ class PreprocessorOptions {
       this.throwOnErrors = false,
       this.throwOnWarnings = false,
       this.useColors = true,
+      this.polyfill = false,
       this.inputFile});
 }

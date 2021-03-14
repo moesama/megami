@@ -3,10 +3,10 @@ part of megami;
 final StyleCubit styleCubit = StyleCubit();
 
 class StyledScaffold extends StatelessWidget {
-  final StyleCubit style;
+  final StyleCubit? style;
   final WidgetBuilder builder;
 
-  const StyledScaffold({Key key, @required this.builder, this.style})
+  const StyledScaffold({Key? key, required this.builder, this.style})
       : super(key: key);
 
   @override
@@ -16,7 +16,7 @@ class StyledScaffold extends StatelessWidget {
       create: (BuildContext context) => cubit,
       child: BlocBuilder<StyleCubit, List<StyleSheet>>(
         builder: (context, state) =>
-            state == null ? Container() : builder.call(context),
+            state.isEmpty ? Container() : builder.call(context),
       ),
     );
   }
@@ -37,15 +37,15 @@ class _ComputedStyle {
 }
 
 class _SelectorSection {
-  _SelectorSection parent;
+  _SelectorSection? parent;
   final List<String> sections;
   final int index;
 
-  _ComputedStyle _privateStyle;
+  _ComputedStyle? _privateStyle;
 
   static final Map<_SelectorSection, _ComputedStyle> store = {};
 
-  static _ComputedStyle getComputedStyle(_SelectorSection selector) =>
+  static _ComputedStyle? getComputedStyle(_SelectorSection selector) =>
       store.entries
           .firstWhereOrNull((element) => element.key == selector)
           ?.value;
@@ -54,7 +54,7 @@ class _SelectorSection {
     // use private style store if index is not 0
     if (selector.index >= 0) {
       selector._privateStyle = _ComputedStyle();
-      return selector._privateStyle;
+      return selector._privateStyle!;
     }
     return store.putIfAbsent(selector, () => _ComputedStyle());
   }
@@ -63,9 +63,9 @@ class _SelectorSection {
     store.clear();
   }
 
-  _ComputedStyle get computeStyle => _privateStyle ?? getComputedStyle(this);
+  _ComputedStyle? get computeStyle => _privateStyle ?? getComputedStyle(this);
 
-  _SelectorSection({this.parent, this.sections, this.index});
+  _SelectorSection({this.parent, required this.sections, this.index = 0});
 
   @override
   String toString() {
@@ -88,7 +88,8 @@ class _Style extends StatelessWidget {
   final _SelectorSection selector;
   final WidgetBuilder builder;
 
-  _Style({Key key, this.builder, this.selector}) : super(key: key);
+  _Style({Key? key, required this.builder, required this.selector})
+      : super(key: key);
 
   void _resolve(BuildContext context) {
     context.visitAncestorElements((element) {
@@ -103,7 +104,7 @@ class _Style extends StatelessWidget {
   Widget _applyStyle(BuildContext context, Widget child) {
     var res = child;
     if (child is TabBar) {
-      res = _StyleComponent.decorateTabIndicator(context, res,
+      res = _StyleComponent.decorateTabIndicator(context, res as TabBar,
           components: selector.computeStyle
               ?.getComponentsByElements(['tab-indicator']));
       res = _StyleComponent.decorateTabControl(context, res,
@@ -120,7 +121,7 @@ class _Style extends StatelessWidget {
     //           ?.getComponentsByElements(['hint']));
     // }
     return _StyleComponent.decorate(context, res,
-        components: selector.computeStyle?.styles?.values);
+        components: selector.computeStyle?.styles.values);
   }
 
   @override
@@ -128,7 +129,7 @@ class _Style extends StatelessWidget {
     _resolve(context);
     return BlocBuilder<StyleCubit, List<StyleSheet>>(
         builder: (BuildContext context, List<StyleSheet> state) {
-      if (state != null && state.isNotEmpty) {
+      if (state.isNotEmpty) {
         resolve(state);
         var child = builder.call(context);
         return _applyStyle(context, child);
@@ -144,16 +145,16 @@ class _Style extends StatelessWidget {
       styles.forEach((stylesheet) {
         stylesheet.ruleSets.forEach((ruleSet) {
           var matched =
-              ruleSet.selectorGroup.selectors.where((s) => s.match(selector));
-          matched.forEach((selector) {
-            store.matched[selector] = ruleSet.declarationGroup
+              ruleSet.selectorGroup?.selectors.where((s) => s.match(selector));
+          matched?.forEach((selector) {
+            store!.matched[selector] = ruleSet.declarationGroup
               ..basePath = stylesheet.basePath;
           });
         });
       });
 
       var sortedEntries =
-      store.matched.entries.where((e) => !e.key.isElement).toList();
+          store.matched.entries.where((e) => !e.key.isElement).toList();
       sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
       store.styles.clear();
       store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
@@ -164,14 +165,14 @@ class _Style extends StatelessWidget {
       final elements = {
         for (var e in sortedEntries)
           e.key.simpleSelectorSequences.last.simpleSelector
-          as PseudoElementSelector:
-          sortedEntries
-              .where((element) => element.key == e.key)
-              .map((e) => e.value)
-              .toList()
+                  as PseudoElementSelector:
+              sortedEntries
+                  .where((element) => element.key == e.key)
+                  .map((e) => e.value)
+                  .toList()
       };
       elements.forEach((key, value) {
-        store.elementStyles[key] = _merge(value);
+        store!.elementStyles[key] = _merge(value);
       });
     }
   }
@@ -181,10 +182,10 @@ class _PreferredSizeStyle extends _Style implements PreferredSizeWidget {
   final Size Function() sizeProvider;
 
   _PreferredSizeStyle({
-    Key key,
-    @required this.sizeProvider,
-    WidgetBuilder builder,
-    _SelectorSection selector,
+    Key? key,
+    required this.sizeProvider,
+    required WidgetBuilder builder,
+    required _SelectorSection selector,
   }) : super(key: key, builder: builder, selector: selector);
 
   @override
@@ -193,17 +194,21 @@ class _PreferredSizeStyle extends _Style implements PreferredSizeWidget {
 
 class _TextStyleWrapper extends StatelessWidget {
   final Widget Function(
-      BuildContext context, TextStyle textStyle, TextAlign textAlign) builder;
+      BuildContext context, TextStyle? textStyle, TextAlign? textAlign) builder;
   final _SelectorSection selector;
-  final TextStyle defaultStyle;
+  final TextStyle? defaultStyle;
 
-  _TextStyleWrapper({Key key, this.builder, this.defaultStyle, this.selector})
+  _TextStyleWrapper(
+      {Key? key,
+      required this.builder,
+      required this.selector,
+      this.defaultStyle})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) => _Style(
         selector: selector,
         builder: (context) => _StyleComponent.decorateText(context, this,
-            components: selector.computeStyle?.styles?.values),
+            components: selector.computeStyle?.styles.values),
       );
 }

@@ -243,7 +243,7 @@ class Tokenizer extends TokenizerBase {
   }
 
   @override
-  Token _errorToken([String message]) {
+  Token _errorToken([String? message]) {
     return _finishToken(TokenKind.ERROR);
   }
 

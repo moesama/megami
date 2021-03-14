@@ -21,17 +21,16 @@ class Svg extends ImageProvider<SvgImageKey> {
   /// Useful for [DecorationImage].
   /// If not specified, will use size from [Image].
   /// If [Image] not specifies size too, will use default size 100x100.
-  final Size size; // nullable
+  final Size? size; // nullable
 
   /// The [ColorFilter], if any, to apply to the drawing.
-  final ColorFilter colorFilter;
+  final ColorFilter? colorFilter;
 
   /// Width and height can also be specified from [Image] constrictor.
   /// Default size is 100x100 logical pixels.
   /// Different size can be specified in [Image] parameters
   const Svg(this.path,
-      {this.source = SvgSource.asset, this.size, this.colorFilter})
-      : assert(path != null);
+      {this.source = SvgSource.asset, this.size, this.colorFilter});
 
   @override
   Future<SvgImageKey> obtainKey(ImageConfiguration configuration) {
@@ -123,9 +122,13 @@ class Svg extends ImageProvider<SvgImageKey> {
     );
   }
 
-  Svg.network(this.path, {this.size, this.colorFilter}): source = SvgSource.network;
-  Svg.asset(this.path, {this.size, this.colorFilter}): source = SvgSource.asset;
-  Svg.file(this.path, {this.size, this.colorFilter}): source = SvgSource.file;
+  Svg.network(this.path, {this.size, this.colorFilter})
+      : source = SvgSource.network;
+
+  Svg.asset(this.path, {this.size, this.colorFilter})
+      : source = SvgSource.asset;
+
+  Svg.file(this.path, {this.size, this.colorFilter}) : source = SvgSource.file;
 
   // Note: == and hashCode not overrided as changes in properties
   // (width, height and scale) are not observable from the here.
@@ -138,15 +141,12 @@ class Svg extends ImageProvider<SvgImageKey> {
 @immutable
 class SvgImageKey {
   const SvgImageKey({
-    @required this.path,
-    @required this.pixelWidth,
-    @required this.pixelHeight,
-    @required this.scale,
+    required this.path,
+    required this.pixelWidth,
+    required this.pixelHeight,
+    required this.scale,
     this.colorFilter,
-  })  : assert(path != null),
-        assert(pixelWidth != null),
-        assert(pixelHeight != null),
-        assert(scale != null);
+  });
 
   /// Path to svg asset.
   final String path;
@@ -160,7 +160,7 @@ class SvgImageKey {
   final int pixelHeight;
 
   /// The [ColorFilter], if any, to apply to the drawing.
-  final ColorFilter colorFilter;
+  final ColorFilter? colorFilter;
 
   /// Used to calculate logical size from physical, i.e.
   /// logicalWidth = [pixelWidth] / [scale],
@@ -191,7 +191,7 @@ class SvgImageKey {
 }
 
 /// Fetches an HTTP resource from the specified [url] using the specified [headers].
-Future<Uint8List> _httpGet(String url, {Map<String, String> headers}) async {
+Future<Uint8List> _httpGet(String url, {Map<String, String>? headers}) async {
   final httpClient = HttpClient();
   final uri = Uri.base.resolve(url);
   final request = await httpClient.getUrl(uri);

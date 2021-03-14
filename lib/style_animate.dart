@@ -3,14 +3,14 @@ part of megami;
 class _AnimatedDecorationBox extends ImplicitlyAnimatedWidget {
   /// The [curve] and [duration] arguments must not be null.
   _AnimatedDecorationBox({
-    Key key,
-    this.decoration,
+    Key? key,
+    required this.decoration,
     this.position = DecorationPosition.background,
-    this.child,
+    required this.child,
     Curve curve = Curves.linear,
-    @required Duration duration,
-    VoidCallback onEnd,
-  })  : assert(decoration == null || decoration.debugAssertIsValid()),
+    required Duration duration,
+    VoidCallback? onEnd,
+  })  : assert(decoration.debugAssertIsValid()),
         super(
           key: key,
           curve: curve,
@@ -51,19 +51,19 @@ class _AnimatedDecorationBox extends ImplicitlyAnimatedWidget {
 
 class _AnimatedDecorationBoxState
     extends AnimatedWidgetBaseState<_AnimatedDecorationBox> {
-  DecorationTween _decoration;
+  late DecorationTween? _decoration;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
     _decoration = visitor(_decoration, widget.decoration,
-        (dynamic value) => DecorationTween(begin: value));
+        (dynamic value) => DecorationTween(begin: value)) as DecorationTween;
   }
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-      child: widget.child,
-      decoration: _decoration?.evaluate(animation),
+      decoration: _decoration?.evaluate(animation) ?? widget.decoration,
       position: widget.position,
+      child: widget.child,
     );
 
   @override
@@ -77,12 +77,12 @@ class _AnimatedDecorationBoxState
 class _AnimatedInnerShadow extends ImplicitlyAnimatedWidget {
   /// The [curve] and [duration] arguments must not be null.
   _AnimatedInnerShadow({
-    Key key,
-    this.boxShadow,
-    this.child,
+    Key? key,
+    required this.boxShadow,
+    required this.child,
     Curve curve = Curves.linear,
-    @required Duration duration,
-    VoidCallback onEnd,
+    required Duration duration,
+    VoidCallback? onEnd,
   }) : super(
           key: key,
           curve: curve,
@@ -121,18 +121,18 @@ class _AnimatedInnerShadow extends ImplicitlyAnimatedWidget {
 
 class _AnimatedInnerShadowState
     extends AnimatedWidgetBaseState<_AnimatedInnerShadow> {
-  _BoxShadowTween _boxShadow;
+  _BoxShadowTween? _boxShadow;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
     _boxShadow = visitor(_boxShadow, widget.boxShadow,
-        (dynamic value) => _BoxShadowTween(begin: value));
+        (dynamic value) => _BoxShadowTween(begin: value)) as _BoxShadowTween;
   }
 
   @override
   Widget build(BuildContext context) => InnerShadow(
+      boxShadow: _boxShadow?.evaluate(animation) ?? widget.boxShadow,
       child: widget.child,
-      boxShadow: _boxShadow?.evaluate(animation),
     );
 
   @override
@@ -146,13 +146,13 @@ class _AnimatedInnerShadowState
 class _AnimatedConstrainedBox extends ImplicitlyAnimatedWidget {
   /// The [curve] and [duration] arguments must not be null.
   _AnimatedConstrainedBox({
-    Key key,
-    this.constraints,
-    this.child,
+    Key? key,
+    required this.constraints,
+    required this.child,
     Curve curve = Curves.linear,
-    @required Duration duration,
-    VoidCallback onEnd,
-  })  : assert(constraints == null || constraints.debugAssertIsValid()),
+    required Duration duration,
+    VoidCallback? onEnd,
+  })  : assert(constraints.debugAssertIsValid()),
         super(
           key: key,
           curve: curve,
@@ -192,18 +192,18 @@ class _AnimatedConstrainedBox extends ImplicitlyAnimatedWidget {
 
 class _AnimatedConstrainedBoxState
     extends AnimatedWidgetBaseState<_AnimatedConstrainedBox> {
-  BoxConstraintsTween _constraints;
+  BoxConstraintsTween? _constraints;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
     _constraints = visitor(_constraints, widget.constraints,
-        (dynamic value) => BoxConstraintsTween(begin: value));
+        (dynamic value) => BoxConstraintsTween(begin: value)) as BoxConstraintsTween;
   }
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
-      child: widget.child,
-      constraints: _constraints?.evaluate(animation),
+      constraints: _constraints?.evaluate(animation) ?? widget.constraints,
+    child: widget.child,
     );
 
   @override
@@ -220,14 +220,14 @@ class _AnimatedTransform extends ImplicitlyAnimatedWidget {
   ///
   /// The [curve] and [duration] arguments must not be null.
   _AnimatedTransform({
-    Key key,
-    this.transform,
+    Key? key,
+    required this.transform,
     this.origin,
     this.alignment,
     this.transformHitTests = true,
-    this.child,
+    required this.child,
     Curve curve = Curves.linear,
-    @required Duration duration,
+    required Duration duration,
   }) : super(
           key: key,
           curve: curve,
@@ -244,9 +244,9 @@ class _AnimatedTransform extends ImplicitlyAnimatedWidget {
   /// {@macro flutter.widgets.child}
   final Widget child;
 
-  final Offset origin;
+  final Offset? origin;
 
-  final AlignmentGeometry alignment;
+  final AlignmentGeometry? alignment;
 
   final bool transformHitTests;
 
@@ -269,24 +269,24 @@ class _AnimatedTransform extends ImplicitlyAnimatedWidget {
 
 class _AnimatedTransformState
     extends AnimatedWidgetBaseState<_AnimatedTransform> {
-  AlignmentGeometryTween _alignment;
-  Matrix4Tween _transform;
+  AlignmentGeometryTween? _alignment;
+  Matrix4Tween? _transform;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
     _alignment = visitor(_alignment, widget.alignment,
-        (dynamic value) => AlignmentGeometryTween(begin: value));
+        (dynamic value) => AlignmentGeometryTween(begin: value)) as AlignmentGeometryTween;
     _transform = visitor(_transform, widget.transform,
-        (dynamic value) => Matrix4Tween(begin: value));
+        (dynamic value) => Matrix4Tween(begin: value)) as Matrix4Tween;
   }
 
   @override
   Widget build(BuildContext context) => Transform(
-      child: widget.child,
-      transform: _transform?.evaluate(animation),
-      alignment: _alignment?.evaluate(animation),
+      transform: _transform?.evaluate(animation) ?? widget.transform,
+      alignment: _alignment?.evaluate(animation) ?? widget.alignment,
       origin: widget.origin,
       transformHitTests: widget.transformHitTests,
+    child: widget.child,
     );
 
   @override
@@ -303,14 +303,14 @@ class _AnimatedTransformState
 class _AnimatedClipRRect extends ImplicitlyAnimatedWidget {
   /// The [curve] and [duration] arguments must not be null.
   _AnimatedClipRRect({
-    Key key,
-    this.borderRadius,
+    Key? key,
+    required this.borderRadius,
     this.clipper,
     this.clipBehavior = Clip.antiAlias,
-    this.child,
+    required this.child,
     Curve curve = Curves.linear,
-    @required Duration duration,
-    VoidCallback onEnd,
+    required Duration duration,
+    VoidCallback? onEnd,
   }) : super(
           key: key,
           curve: curve,
@@ -329,7 +329,7 @@ class _AnimatedClipRRect extends ImplicitlyAnimatedWidget {
   final Widget child;
 
   final BorderRadius borderRadius;
-  final CustomClipper<RRect> clipper;
+  final CustomClipper<RRect>? clipper;
   final Clip clipBehavior;
 
   @override
@@ -344,20 +344,20 @@ class _AnimatedClipRRect extends ImplicitlyAnimatedWidget {
 
 class _AnimatedClipRRectState
     extends AnimatedWidgetBaseState<_AnimatedClipRRect> {
-  Tween<BorderRadius> _borderRadius;
+  Tween<BorderRadius>? _borderRadius;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
     _borderRadius = visitor(_borderRadius, widget.borderRadius,
-        (dynamic value) => BorderRadiusTween(begin: value));
+        (dynamic value) => BorderRadiusTween(begin: value)) as BorderRadiusTween;
   }
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-      child: widget.child,
       clipper: widget.clipper,
       clipBehavior: widget.clipBehavior,
-      borderRadius: _borderRadius.evaluate(animation),
+      borderRadius: _borderRadius?.evaluate(animation) ?? widget.borderRadius,
+    child: widget.child,
     );
 
   @override
@@ -373,13 +373,13 @@ class _AnimatedBackgroundBlur extends ImplicitlyAnimatedWidget {
   /// The [opacity] argument must not be null and must be between 0.0 and 1.0,
   /// inclusive. The [curve] and [duration] arguments must not be null.
   const _AnimatedBackgroundBlur({
-    Key key,
-    this.child,
-    @required this.sigma,
+    Key? key,
+    required this.child,
+    required this.sigma,
     Curve curve = Curves.linear,
-    @required Duration duration,
-    VoidCallback onEnd,
-  })  : assert(sigma != null && sigma >= 0.0),
+    required Duration duration,
+    VoidCallback? onEnd,
+  })  : assert(sigma >= 0.0),
         super(
           key: key,
           curve: curve,
@@ -406,134 +406,134 @@ class _AnimatedBackgroundBlur extends ImplicitlyAnimatedWidget {
 
 class _AnimatedBackgroundBlurState
     extends ImplicitlyAnimatedWidgetState<_AnimatedBackgroundBlur> {
-  Tween<double> _sigma;
+  Tween<double>? _sigma;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
     _sigma = visitor(
-        _sigma, widget.sigma, (dynamic value) => Tween<double>(begin: value));
+        _sigma, widget.sigma, (dynamic value) => Tween<double>(begin: value)) as Tween<double>;
   }
 
   @override
   Widget build(BuildContext context) => BackdropFilter(
       filter: ui.ImageFilter.blur(
-        sigmaX: _sigma.evaluate(animation),
-        sigmaY: _sigma.evaluate(animation),
+        sigmaX: _sigma?.evaluate(animation) ?? widget.sigma,
+        sigmaY: _sigma?.evaluate(animation) ?? widget.sigma,
       ),
       child: widget.child,
     );
 }
 
-class _AnimatedText extends ImplicitlyAnimatedWidget {
-  /// Creates a container that animates its parameters implicitly.
-  ///
-  /// The [curve] and [duration] arguments must not be null.
-  _AnimatedText(
-    this.data, {
-    Key key,
-    this.locale,
-    this.maxLines,
-    this.overflow,
-    this.semanticsLabel,
-    this.softWrap,
-    this.strutStyle,
-    this.style,
-    this.textAlign,
-    this.textDirection,
-    this.textScaleFactor,
-    this.textWidthBasis,
-    Curve curve = Curves.linear,
-    @required Duration duration,
-    VoidCallback onEnd,
-  }) : super(key: key, curve: curve, duration: duration, onEnd: onEnd);
-
-  final String data;
-  final TextStyle style;
-  final StrutStyle strutStyle;
-  final TextAlign textAlign;
-  final TextDirection textDirection;
-  final Locale locale;
-  final bool softWrap;
-  final TextOverflow overflow;
-  final double textScaleFactor;
-  final int maxLines;
-  final String semanticsLabel;
-  final TextWidthBasis textWidthBasis;
-
-  @override
-  _AnimatedTextState createState() => _AnimatedTextState();
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    // TODO: denug variables
-  }
-}
-
-class _AnimatedTextState extends AnimatedWidgetBaseState<_AnimatedText> {
-  Tween<double> _textScaleFactor;
-  Tween<double> _fontSize;
-  Tween<double> _letterSpacing;
-  Tween<double> _wordSpacing;
-  Tween<double> _height;
-  Tween<double> _decorationThickness;
-  Tween<int> _maxLines;
-  ColorTween _color;
-  ColorTween _decorationColor;
-
-  // TODO: animate background and foreground?
-
-  @override
-  void forEachTween(TweenVisitor<dynamic> visitor) {
-    _textScaleFactor = visitor(_textScaleFactor, widget.textScaleFactor,
-        (dynamic value) => Tween<double>(begin: value));
-    _fontSize = visitor(_fontSize, widget.style?.fontSize,
-        (dynamic value) => Tween<double>(begin: value));
-    _letterSpacing = visitor(_letterSpacing, widget.style?.letterSpacing,
-        (dynamic value) => Tween<double>(begin: value));
-    _wordSpacing = visitor(_wordSpacing, widget.style?.wordSpacing,
-        (dynamic value) => Tween<double>(begin: value));
-    _height = visitor(_height, widget.style?.height,
-        (dynamic value) => Tween<double>(begin: value));
-    _decorationThickness = visitor(
-        _decorationThickness,
-        widget.style?.decorationThickness,
-        (dynamic value) => Tween<double>(begin: value));
-    _maxLines = visitor(_maxLines, widget.maxLines,
-        (dynamic value) => Tween<int>(begin: value));
-    _color = visitor(_color, widget.style?.color,
-        (dynamic value) => ColorTween(begin: value));
-    _decorationColor = visitor(_decorationColor, widget.style?.decorationColor,
-        (dynamic value) => ColorTween(begin: value));
-  }
-
-  @override
-  Widget build(BuildContext context) => Text(
-        widget.data,
-        style: widget.style?.copyWith(
-          fontSize: _fontSize?.evaluate(animation),
-          letterSpacing: _letterSpacing?.evaluate(animation),
-          wordSpacing: _wordSpacing?.evaluate(animation),
-          height: _height?.evaluate(animation),
-          decorationThickness: _decorationThickness?.evaluate(animation),
-          color: _color?.evaluate(animation),
-          decorationColor: _decorationColor?.evaluate(animation),
-        ),
-        strutStyle: widget.strutStyle,
-        textAlign: widget.textAlign,
-        textDirection: widget.textDirection,
-        locale: widget.locale,
-        softWrap: widget.softWrap,
-        overflow: widget.overflow,
-        textScaleFactor: _textScaleFactor?.evaluate(animation),
-        maxLines: _maxLines?.evaluate(animation),
-        semanticsLabel: widget.semanticsLabel,
-        textWidthBasis: widget.textWidthBasis,
-      );
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder description) {
-    super.debugFillProperties(description);
-    // TODO: debug variables
-  }
-}
+// class _AnimatedText extends ImplicitlyAnimatedWidget {
+//   /// Creates a container that animates its parameters implicitly.
+//   ///
+//   /// The [curve] and [duration] arguments must not be null.
+//   _AnimatedText(
+//     this.data, {
+//     Key key,
+//     this.locale,
+//     this.maxLines,
+//     this.overflow,
+//     this.semanticsLabel,
+//     this.softWrap,
+//     this.strutStyle,
+//     this.style,
+//     this.textAlign,
+//     this.textDirection,
+//     this.textScaleFactor,
+//     this.textWidthBasis,
+//     Curve curve = Curves.linear,
+//     @required Duration duration,
+//     VoidCallback onEnd,
+//   }) : super(key: key, curve: curve, duration: duration, onEnd: onEnd);
+//
+//   final String data;
+//   final TextStyle style;
+//   final StrutStyle strutStyle;
+//   final TextAlign textAlign;
+//   final TextDirection textDirection;
+//   final Locale locale;
+//   final bool softWrap;
+//   final TextOverflow overflow;
+//   final double textScaleFactor;
+//   final int maxLines;
+//   final String semanticsLabel;
+//   final TextWidthBasis textWidthBasis;
+//
+//   @override
+//   _AnimatedTextState createState() => _AnimatedTextState();
+//
+//   @override
+//   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+//     super.debugFillProperties(properties);
+//     // TODO: denug variables
+//   }
+// }
+//
+// class _AnimatedTextState extends AnimatedWidgetBaseState<_AnimatedText> {
+//   Tween<double> _textScaleFactor;
+//   Tween<double> _fontSize;
+//   Tween<double> _letterSpacing;
+//   Tween<double> _wordSpacing;
+//   Tween<double> _height;
+//   Tween<double> _decorationThickness;
+//   Tween<int> _maxLines;
+//   ColorTween _color;
+//   ColorTween _decorationColor;
+//
+//   // TODO: animate background and foreground?
+//
+//   @override
+//   void forEachTween(TweenVisitor<dynamic> visitor) {
+//     _textScaleFactor = visitor(_textScaleFactor, widget.textScaleFactor,
+//         (dynamic value) => Tween<double>(begin: value));
+//     _fontSize = visitor(_fontSize, widget.style?.fontSize,
+//         (dynamic value) => Tween<double>(begin: value));
+//     _letterSpacing = visitor(_letterSpacing, widget.style?.letterSpacing,
+//         (dynamic value) => Tween<double>(begin: value));
+//     _wordSpacing = visitor(_wordSpacing, widget.style?.wordSpacing,
+//         (dynamic value) => Tween<double>(begin: value));
+//     _height = visitor(_height, widget.style?.height,
+//         (dynamic value) => Tween<double>(begin: value));
+//     _decorationThickness = visitor(
+//         _decorationThickness,
+//         widget.style?.decorationThickness,
+//         (dynamic value) => Tween<double>(begin: value));
+//     _maxLines = visitor(_maxLines, widget.maxLines,
+//         (dynamic value) => Tween<int>(begin: value));
+//     _color = visitor(_color, widget.style?.color,
+//         (dynamic value) => ColorTween(begin: value));
+//     _decorationColor = visitor(_decorationColor, widget.style?.decorationColor,
+//         (dynamic value) => ColorTween(begin: value));
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) => Text(
+//         widget.data,
+//         style: widget.style?.copyWith(
+//           fontSize: _fontSize?.evaluate(animation),
+//           letterSpacing: _letterSpacing?.evaluate(animation),
+//           wordSpacing: _wordSpacing?.evaluate(animation),
+//           height: _height?.evaluate(animation),
+//           decorationThickness: _decorationThickness?.evaluate(animation),
+//           color: _color?.evaluate(animation),
+//           decorationColor: _decorationColor?.evaluate(animation),
+//         ),
+//         strutStyle: widget.strutStyle,
+//         textAlign: widget.textAlign,
+//         textDirection: widget.textDirection,
+//         locale: widget.locale,
+//         softWrap: widget.softWrap,
+//         overflow: widget.overflow,
+//         textScaleFactor: _textScaleFactor?.evaluate(animation),
+//         maxLines: _maxLines?.evaluate(animation),
+//         semanticsLabel: widget.semanticsLabel,
+//         textWidthBasis: widget.textWidthBasis,
+//       );
+//
+//   @override
+//   void debugFillProperties(DiagnosticPropertiesBuilder description) {
+//     super.debugFillProperties(description);
+//     // TODO: debug variables
+//   }
+// }

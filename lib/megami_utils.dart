@@ -7,10 +7,10 @@ double _gradToRadian(double grad) => grad * pi / 200;
 double _turnToRadian(double turn) => turn * pi * 2;
 
 class _Vector4<T> {
-  T top;
-  T right;
-  T bottom;
-  T left;
+  T? top;
+  T? right;
+  T? bottom;
+  T? left;
 
   _Vector4({this.top, this.right, this.bottom, this.left});
 
@@ -32,7 +32,8 @@ class _Vector4<T> {
     return this;
   }
 
-  _Vector4<T> fill(List<T> values) {
+  _Vector4<T> fill(List<T>? values) {
+    if (values == null) return this;
     switch (values.length) {
       case 0:
         return this;
@@ -53,9 +54,9 @@ class _Vector4<T> {
 }
 
 class _UriHelper {
-  static Uri from(UriTerm term) => Uri.tryParse(term.value);
+  static Uri? from(UriTerm term) => Uri.tryParse(term.value);
 
-  static Uri fromExp(Expression expression) {
+  static Uri? fromExp(Expression? expression) {
     if (expression is UriTerm) return from(expression);
     if (expression is Expressions) {
       var uriTerm =
@@ -67,7 +68,7 @@ class _UriHelper {
 }
 
 class _BoxFitHelper {
-  static BoxFit from(LiteralTerm term) {
+  static BoxFit? from(LiteralTerm term) {
     switch (term.value.toString().toLowerCase().trim()) {
       case 'cover':
         return BoxFit.cover;
@@ -86,7 +87,7 @@ class _BoxFitHelper {
     }
   }
 
-  static BoxFit fromExp(Expression expression) {
+  static BoxFit? fromExp(Expression? expression) {
     if (expression is LiteralTerm) return from(expression);
     if (expression is Expressions) {
       for (var term in expression.expressions.reversed) {
@@ -101,7 +102,7 @@ class _BoxFitHelper {
 }
 
 class _ImageRepeatHelper {
-  static ImageRepeat from(LiteralTerm term) {
+  static ImageRepeat? from(LiteralTerm term) {
     switch (term.value.toString().toLowerCase().trim()) {
       case 'repeat':
         return ImageRepeat.repeat;
@@ -116,7 +117,7 @@ class _ImageRepeatHelper {
     }
   }
 
-  static ImageRepeat fromExp(Expression expression) {
+  static ImageRepeat? fromExp(Expression? expression) {
     if (expression is LiteralTerm) return from(expression);
     if (expression is Expressions) {
       for (var term in expression.expressions.reversed) {
@@ -131,9 +132,9 @@ class _ImageRepeatHelper {
 }
 
 class _GradientHelper {
-  static Gradient from(FunctionTerm term) {
+  static Gradient? from(FunctionTerm term) {
     if (term.params.expressions.isEmpty) return null;
-    GradientTransform transform;
+    GradientTransform? transform;
     var colorStart = 1;
     switch (term.value) {
       case 'linear-gradient':
@@ -154,6 +155,7 @@ class _GradientHelper {
         var colors = term.resolvedParams
             .sublist(colorStart)
             .map((e) => _ColorHelper.fromExp(e))
+            .whereNotNull()
             .toList();
         var stops = _GradientStopHelper.fromExps(
             term.resolvedParams.sublist(colorStart));
@@ -179,6 +181,7 @@ class _GradientHelper {
         var colors = term.resolvedParams
             .sublist(colorStart)
             .map((e) => _ColorHelper.fromExp(e))
+            .whereNotNull()
             .toList();
         var stops = _GradientStopHelper.fromExps(
             term.resolvedParams.sublist(colorStart));
@@ -193,7 +196,7 @@ class _GradientHelper {
     }
   }
 
-  static Gradient fromExp(Expression expression) {
+  static Gradient? fromExp(Expression? expression) {
     if (expression is FunctionTerm) return from(expression);
     if (expression is Expressions) {
       for (var term in expression.expressions.reversed) {
@@ -208,7 +211,7 @@ class _GradientHelper {
 }
 
 class _AlignmentHelper {
-  static Alignment fromExp(Expression expression) {
+  static Alignment fromExp(Expression? expression) {
     var align = <double>[0, 0];
     var count = 0;
     if (expression is Expressions) {
@@ -275,7 +278,7 @@ class _AlignmentHelper {
     return Alignment(align[0], align[1]);
   }
 
-  static TextAlign taFromExp(Expression expression) {
+  static TextAlign? taFromExp(Expression? expression) {
     var term = expression;
     if (expression is Expressions && expression.expressions.isNotEmpty) {
       term = expression.expressions.first;
@@ -301,7 +304,7 @@ class _AlignmentHelper {
 }
 
 class _BlendModeHelper {
-  static BlendMode from(LiteralTerm term) {
+  static BlendMode? from(LiteralTerm term) {
     switch (term.value.toString().toLowerCase().trim()) {
       case 'clear':
         return BlendMode.clear;
@@ -366,7 +369,7 @@ class _BlendModeHelper {
     }
   }
 
-  static BlendMode fromExp(Expression expression) {
+  static BlendMode? fromExp(Expression? expression) {
     if (expression is Expressions) {
       for (var term in expression.expressions.reversed) {
         if (term is LiteralTerm) {
@@ -393,7 +396,7 @@ class _AngleHelper {
         radians = _turnToRadian(radians.toDouble());
         break;
     }
-    return radians;
+    return radians.toDouble();
   }
 }
 
@@ -403,7 +406,7 @@ class _GradientTransformHelper {
     return GradientRotation(radians);
   }
 
-  static GradientTransform fromExp(Expression expression) {
+  static GradientTransform? fromExp(Expression expression) {
     if (expression is AngleTerm) {
       return from(expression);
     }
@@ -480,19 +483,19 @@ class _GradientRadiusHelper {
       case CLOSEST_SIDE:
         return 1.0;
       case CLOSEST_CORNER:
-        return pow(
-            pow(1 - center.x.abs(), 2) + pow(1 - center.y.abs(), 2), 0.5);
+        return pow(pow(1 - center.x.abs(), 2) + pow(1 - center.y.abs(), 2), 0.5)
+            .toDouble();
       case FARTHEST_SIDE:
         return 2.0 - min(center.x.abs(), center.y.abs());
       default:
-        return pow(
-            pow(1 + center.x.abs(), 2) + pow(1 + center.y.abs(), 2), 0.5);
+        return pow(pow(1 + center.x.abs(), 2) + pow(1 + center.y.abs(), 2), 0.5)
+            .toDouble();
     }
   }
 }
 
 class _DurationHelper {
-  static Duration fromExp(Expression expression) {
+  static Duration? fromExp(Expression? expression) {
     if (expression != null && expression is TimeTerm) {
       switch (expression.unit) {
         case TokenKind.UNIT_TIME_MS:
@@ -509,7 +512,7 @@ class _DurationHelper {
 }
 
 class _CurveHelper {
-  static Curve fromExp(Expression expression) {
+  static Curve? fromExp(Expression? expression) {
     if (expression == null) return null;
     if (expression is LiteralTerm) {
       switch (expression.text.trim()) {
@@ -542,9 +545,9 @@ class InnerShadow extends SingleChildRenderObjectWidget {
   final List<BoxShadow> boxShadow;
 
   const InnerShadow({
-    Key key,
+    Key? key,
     this.boxShadow = const <BoxShadow>[],
-    Widget child,
+    Widget? child,
   }) : super(key: key, child: child);
 
   @override
@@ -562,17 +565,16 @@ class InnerShadow extends SingleChildRenderObjectWidget {
 }
 
 class _RenderInnerShadow extends RenderProxyBox {
-  List<BoxShadow> boxShadow;
+  late List<BoxShadow> boxShadow;
 
   @override
   void paint(PaintingContext context, Offset offset) {
     super.paint(context, offset);
-    if (child == null) return;
-    if (child.paintBounds.isEmpty) return;
+    if (child == null || child!.paintBounds.isEmpty) return;
     final bounds = offset & size;
 
     context.canvas.saveLayer(bounds, Paint());
-    child.paint(context, offset);
+    child!.paint(context, offset);
 
     for (final shadow in boxShadow) {
       final shadowRect = bounds.inflate(shadow.blurSigma);
@@ -581,16 +583,16 @@ class _RenderInnerShadow extends RenderProxyBox {
         ..colorFilter = ColorFilter.mode(shadow.color, BlendMode.srcOut)
         ..imageFilter = ui.ImageFilter.blur(
             sigmaX: shadow.blurSigma, sigmaY: shadow.blurSigma);
-      final scaleX = (child.paintBounds.width - shadow.spreadRadius * 2) /
-          child.paintBounds.width;
-      final scaleY = (child.paintBounds.height - shadow.spreadRadius * 2) /
-          child.paintBounds.height;
+      final scaleX = (child!.paintBounds.width - shadow.spreadRadius * 2) /
+          child!.paintBounds.width;
+      final scaleY = (child!.paintBounds.height - shadow.spreadRadius * 2) /
+          child!.paintBounds.height;
       context.canvas
         ..saveLayer(shadowRect, shadowPaint)
         ..translate(offset.dx + shadow.offset.dx + shadow.spreadRadius,
             offset.dy + shadow.offset.dy + shadow.spreadRadius)
         ..scale(scaleX, scaleY);
-      child.paint(context, Offset.zero);
+      child!.paint(context, Offset.zero);
       context.canvas.restore();
     }
 
@@ -602,9 +604,9 @@ class DropShadow extends SingleChildRenderObjectWidget {
   final List<BoxShadow> boxShadow;
 
   const DropShadow({
-    Key key,
+    Key? key,
     this.boxShadow = const <BoxShadow>[],
-    Widget child,
+    Widget? child,
   }) : super(key: key, child: child);
 
   @override
@@ -622,11 +624,11 @@ class DropShadow extends SingleChildRenderObjectWidget {
 }
 
 class _RenderDropShadow extends RenderProxyBox {
-  List<BoxShadow> boxShadow;
+  late List<BoxShadow> boxShadow;
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    if (child == null || child.paintBounds.isEmpty) {
+    if (child == null || child!.paintBounds.isEmpty) {
       super.paint(context, offset);
       return;
     }
@@ -640,16 +642,16 @@ class _RenderDropShadow extends RenderProxyBox {
           sigmaX: shadow.blurSigma,
           sigmaY: shadow.blurSigma,
         );
-      final scaleX = (child.paintBounds.width + shadow.spreadRadius * 2) /
-          child.paintBounds.width;
-      final scaleY = (child.paintBounds.height + shadow.spreadRadius * 2) /
-          child.paintBounds.height;
+      final scaleX = (child!.paintBounds.width + shadow.spreadRadius * 2) /
+          child!.paintBounds.width;
+      final scaleY = (child!.paintBounds.height + shadow.spreadRadius * 2) /
+          child!.paintBounds.height;
       context.canvas
         ..saveLayer(shadowRect, shadowPaint)
         ..translate(offset.dx + shadow.offset.dx - shadow.spreadRadius,
             offset.dy + shadow.offset.dy - shadow.spreadRadius)
         ..scale(scaleX, scaleY);
-      child.paint(context, Offset.zero);
+      child!.paint(context, Offset.zero);
       context.canvas.restore();
     }
     super.paint(context, offset);
@@ -657,11 +659,11 @@ class _RenderDropShadow extends RenderProxyBox {
 }
 
 class _BoxShadowTween extends Tween<List<BoxShadow>> {
-  _BoxShadowTween({List<BoxShadow> begin, List<BoxShadow> end})
+  _BoxShadowTween({List<BoxShadow>? begin, List<BoxShadow>? end})
       : super(begin: begin, end: end);
 
   @override
-  List<BoxShadow> lerp(double t) => BoxShadow.lerpList(begin, end, t);
+  List<BoxShadow> lerp(double t) => BoxShadow.lerpList(begin, end, t)!;
 }
 
 class ColorMatrix {
@@ -669,7 +671,7 @@ class ColorMatrix {
   static final lumG = 0.715;
   static final lumB = 0.072;
 
-  ColorMatrix({List<double> src}) : _list = src ?? List.filled(20, 0.0);
+  ColorMatrix({List<double>? src}) : _list = src ?? List.filled(20, 0.0);
 
   final List<double> _list;
 
@@ -807,7 +809,7 @@ class ColorMatrix {
     final matrix = ColorMatrix();
     matrix.reset();
     final br = (bright - 1).clamp(-1, 1) * 255;
-    return matrix.set(0, 4, br).set(1, 4, br).set(2, 4, br);
+    return matrix.set(0, 4, br.toDouble()).set(1, 4, br.toDouble()).set(2, 4, br.toDouble());
   }
 
   static ColorMatrix saturation(double sat) {
@@ -835,7 +837,7 @@ class ColorMatrix {
     final matrix = ColorMatrix();
     final br = ((1 - contrast) * 255 / 2).clamp(-255, 255);
     matrix._setScale(contrast, contrast, contrast, 1.0);
-    return matrix.set(0, 4, br).set(1, 4, br).set(2, 4, br);
+    return matrix.set(0, 4, br.toDouble()).set(1, 4, br.toDouble()).set(2, 4, br.toDouble());
   }
 
   static ColorMatrix grayscale(double scale) =>
@@ -878,9 +880,9 @@ class ColorMatrix {
         .set(0, 0, iv)
         .set(1, 1, iv)
         .set(2, 2, iv)
-        .set(0, 4, br)
-        .set(1, 4, br)
-        .set(2, 4, br);
+        .set(0, 4, br.toDouble())
+        .set(1, 4, br.toDouble())
+        .set(2, 4, br.toDouble());
   }
 
   static ColorMatrix sepia(double factor) {

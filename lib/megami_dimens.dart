@@ -14,7 +14,7 @@ class Dimen {
       : size = 0,
         unit = DimenUnit.PT;
 
-  static Dimen fromLength(LengthTerm term) {
+  static Dimen? fromLength(LengthTerm? term) {
     if (term == null) return null;
     switch (term.unit) {
       case TokenKind.UNIT_LENGTH_PX:
@@ -24,12 +24,12 @@ class Dimen {
     }
   }
 
-  static Dimen fromRem(RemTerm term) {
+  static Dimen? fromRem(RemTerm? term) {
     if (term == null) return null;
     return Dimen(term.value, DimenUnit.REM);
   }
 
-  static Dimen fromViewport(ViewportTerm term) {
+  static Dimen? fromViewport(ViewportTerm? term) {
     if (term == null) return null;
     switch (term.unit) {
       case TokenKind.UNIT_VIEWPORT_VH:
@@ -45,26 +45,26 @@ class Dimen {
     }
   }
 
-  static Dimen fromUnit(UnitTerm term) {
+  static Dimen? fromUnit(UnitTerm? term) {
     if (term == null) return null;
     switch (term.runtimeType) {
       case LengthTerm:
-        return fromLength(term);
+        return fromLength(term as LengthTerm);
       case RemTerm:
-        return fromRem(term);
+        return fromRem(term as RemTerm);
       case ViewportTerm:
-        return fromViewport(term);
+        return fromViewport(term as ViewportTerm);
       default:
         return null;
     }
   }
 
-  static Dimen fromEm(EmTerm term) {
+  static Dimen? fromEm(EmTerm? term) {
     if (term == null) return null;
     return Dimen(term.value, DimenUnit.EM);
   }
 
-  static Dimen fromPercent(PercentageTerm term,
+  static Dimen? fromPercent(PercentageTerm? term,
       {DimenAxis axis = DimenAxis.HORIZONTAL}) {
     if (term == null) return null;
     switch (axis) {
@@ -73,10 +73,9 @@ class Dimen {
       case DimenAxis.VERTICAL:
         return Dimen(term.value, DimenUnit.PV);
     }
-    return null;
   }
 
-  static Dimen fromLiteral(LiteralTerm term) {
+  static Dimen? fromLiteral(LiteralTerm? term) {
     if (term == null) return null;
     if (term is UnitTerm) return fromUnit(term);
     if (term is PercentageTerm) return fromPercent(term);
@@ -93,7 +92,7 @@ class Dimen {
       expression is PercentageTerm ||
       expression is EmTerm;
 
-  double dimension(BuildContext context, {double fontSize = 0.0}) {
+  double dimension(BuildContext context, {double? fontSize = 0.0}) {
     switch (unit) {
       case DimenUnit.PT:
         return size.toDouble();
@@ -102,26 +101,24 @@ class Dimen {
       case DimenUnit.SP:
         return size * Dimens.textScaleFactor;
       case DimenUnit.EM:
-        var fs = fontSize;
-        if (fs == 0) fs = Theme.of(context).textTheme.bodyText1.fontSize;
+        var fs = fontSize ?? 0;
+        if (fs == 0) fs = Theme.of(context).textTheme.bodyText1?.fontSize ?? 0;
         return size * fs * Dimens.textScaleFactor;
       case DimenUnit.REM:
-        var fs = Theme.of(context).textTheme.bodyText1.fontSize;
+        var fs = Theme.of(context).textTheme.bodyText1?.fontSize ?? 0;
         return size * fs * Dimens.textScaleFactor;
       case DimenUnit.PH:
         try {
-          return size * (context.findRenderObject()?.paintBounds?.width ?? 0);
+          return size * (context.findRenderObject()?.paintBounds.width ?? 0);
         } catch (e) {
           return 0;
         }
-        break;
       case DimenUnit.PV:
         try {
-          return size * (context.findRenderObject()?.paintBounds?.height ?? 0);
+          return size * (context.findRenderObject()?.paintBounds.height ?? 0);
         } catch (e) {
           return 0;
         }
-        break;
       case DimenUnit.VH:
         return size / 100 * Dimens.screenHeight;
       case DimenUnit.VW:
