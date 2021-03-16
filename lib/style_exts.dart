@@ -389,7 +389,7 @@ enum TextStyleType {
 extension BuildContextExt on BuildContext {
   Widget? styledText(
       dynamic selectors,
-      {int index = 0,
+      {int index = -1,
       TextStyleType defaultStyleType = TextStyleType.BODY1,
       required
           Widget Function(BuildContext context, TextStyle? textStyle,

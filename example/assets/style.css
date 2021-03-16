@@ -1,5 +1,5 @@
 .page-container { background-color: #f8f8f8; }
-.banner-wrap { background: url(images/banner.jpg) cover; filter: contrast(80%); margin-bottom: 60pt; }
+.banner-wrap { background: url(images/layout.svg) cover; filter: contrast(80%); margin-bottom: 60pt; }
 .banner { background-color: #0022CC; background-blend-mode: color; }
 .search { color: #CCCCCC; height: 40pt; align: center; line-height: 20pt; border-radius: 20pt; padding: 0pt 20pt; margin: 0pt 15pt; background-color: rgba(255, 255, 255, 0.3); }
 .appbar-content { align: bottom; } .appbar-title, .appbar-subtitle, .appbar-text { color: white; align: left; margin: 4pt 20pt 0pt; text-align: start; }

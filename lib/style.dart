@@ -51,12 +51,9 @@ class _SelectorSection {
           ?.value;
 
   static _ComputedStyle createComputedStyle(_SelectorSection selector) {
-    // use private style store if index is not 0
-    if (selector.index >= 0) {
-      selector._privateStyle = _ComputedStyle();
-      return selector._privateStyle!;
-    }
-    return store.putIfAbsent(selector, () => _ComputedStyle());
+    var style = _ComputedStyle();
+    store[selector.copy()] = style;
+    return style;
   }
 
   static void reset() {
@@ -65,7 +62,18 @@ class _SelectorSection {
 
   _ComputedStyle? get computeStyle => _privateStyle ?? getComputedStyle(this);
 
-  _SelectorSection({this.parent, required this.sections, this.index = 0});
+  _SelectorSection({this.parent, required List<String> sections, this.index = -1})
+      : sections = sections.toList(growable: true) {
+    this.sections.sort((a, b) => a.compareTo(b));
+  }
+
+  _SelectorSection copy(
+      {_SelectorSection? parent, List<String>? sections, int? index}) =>
+      _SelectorSection(
+        parent: parent?.copy() ?? this.parent?.copy(),
+        sections: sections ?? this.sections.toList(),
+        index: index ?? this.index,
+      );
 
   @override
   String toString() {
