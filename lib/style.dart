@@ -41,35 +41,41 @@ class _SelectorSection {
   final List<String> sections;
   final int index;
 
-  _ComputedStyle _privateStyle;
-
   static final Map<_SelectorSection, _ComputedStyle> store = {};
 
-  static _ComputedStyle getComputedStyle(_SelectorSection selector) =>
-      store.entries
-          .firstWhereOrNull((element) => element.key == selector)
-          ?.value;
+  static _ComputedStyle getComputedStyle(_SelectorSection selector) {
+    return store.entries.firstWhereOrNull((element) {
+      return element.key == selector;
+    })?.value;
+  }
 
   static _ComputedStyle createComputedStyle(_SelectorSection selector) {
-    // use private style store if index is not 0
-    if (selector.index >= 0) {
-      selector._privateStyle = _ComputedStyle();
-      return selector._privateStyle;
-    }
-    return store.putIfAbsent(selector, () => _ComputedStyle());
+    var style = _ComputedStyle();
+    store[selector.copy()] = style;
+    return style;
   }
 
   static void reset() {
     store.clear();
   }
 
-  _ComputedStyle get computeStyle => _privateStyle ?? getComputedStyle(this);
+  _ComputedStyle get computeStyle => getComputedStyle(this);
 
-  _SelectorSection({this.parent, this.sections, this.index});
+  _SelectorSection({this.parent, this.sections, this.index}) {
+    sections.sort((a, b) => a.compareTo(b));
+  }
+
+  _SelectorSection copy(
+          {_SelectorSection parent, List<String> sections, int index}) =>
+      _SelectorSection(
+        parent: parent?.copy() ?? this.parent?.copy(),
+        sections: sections ?? this.sections.toList(),
+        index: index ?? this.index,
+      );
 
   @override
   String toString() {
-    return 'SelectorSection: $sections , index: $index';
+    return 'SelectorSection: p - $parent, $sections , index: $index';
   }
 
   @override
@@ -153,7 +159,7 @@ class _Style extends StatelessWidget {
       });
 
       var sortedEntries =
-      store.matched.entries.where((e) => !e.key.isElement).toList();
+          store.matched.entries.where((e) => !e.key.isElement).toList();
       sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
       store.styles.clear();
       store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
@@ -164,11 +170,11 @@ class _Style extends StatelessWidget {
       final elements = {
         for (var e in sortedEntries)
           e.key.simpleSelectorSequences.last.simpleSelector
-          as PseudoElementSelector:
-          sortedEntries
-              .where((element) => element.key == e.key)
-              .map((e) => e.value)
-              .toList()
+                  as PseudoElementSelector:
+              sortedEntries
+                  .where((element) => element.key == e.key)
+                  .map((e) => e.value)
+                  .toList()
       };
       elements.forEach((key, value) {
         store.elementStyles[key] = _merge(value);

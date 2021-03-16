@@ -5,7 +5,7 @@
 .appbar-content { align: bottom; } .appbar-title, .appbar-subtitle, .appbar-text { color: white; align: left; margin: 4pt 20pt 0pt; text-align: start; }
 .appbar-title { font-size: 3em; } .appbar-subtitle { font-size: 1em; font-weight: 300; opacity: 0.3; padding-left: 0.2em; } .appbar-text { font-size: 2em; padding-left: 0.1em; }
 .player-panel { height: 80pt; background: white; border-radius: 15pt; overflow: hidden; margin: 20pt; box-shadow: 5pt 5pt 10pt rgba(0, 0, 0, 0.1); }
-.player-cover { width: 80pt; height: 80pt; background: #CCCCCC; }
+.player-cover { width: 80pt; height: 80pt; background: #CCCCCC; } .player-cover.active { background: red; }
 .section-header { margin: 20pt; }
 .section-title, .album-title { font-weight: bold; color: #405c91; }
 .section-op, .album-author { color: #97aacc; }
