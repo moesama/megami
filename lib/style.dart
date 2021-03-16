@@ -61,8 +61,9 @@ class _SelectorSection {
 
   _ComputedStyle get computeStyle => getComputedStyle(this);
 
-  _SelectorSection({this.parent, this.sections, this.index}) {
-    sections.sort((a, b) => a.compareTo(b));
+  _SelectorSection({this.parent, List<String> sections, this.index})
+      : sections = sections.toList(growable: true) {
+    this.sections.sort((a, b) => a.compareTo(b));
   }
 
   _SelectorSection copy(
