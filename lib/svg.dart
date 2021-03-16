@@ -69,53 +69,51 @@ class Svg extends ImageProvider<SvgImageKey> {
 
   static Future<ImageInfo> _loadNetworkAsync(SvgImageKey key) async {
     final bytes = await _httpGet(key.path);
-    return SvgPicture.svgByteDecoderOutsideViewBox(
-            bytes, key.colorFilter, key.toString())
-        .then((value) => value.picture.toImage(
-              key.pixelWidth,
-              key.pixelHeight,
-            ))
-        .then((value) => ImageInfo(
-              image: value,
-              scale: key.scale,
-            ));
+    final svgRoot = await svg.fromSvgBytes(bytes, key.path);
+    return _loadAsync(key, svgRoot);
   }
 
   static Future<ImageInfo> _loadAssetAsync(SvgImageKey key) async {
     final rawSvg = await rootBundle.loadString(key.path);
     final svgRoot = await svg.fromSvgString(rawSvg, key.path);
-    final picture = svgRoot.toPicture(
-      size: Size(
-        key.pixelWidth.toDouble(),
-        key.pixelHeight.toDouble(),
-      ),
-      clipToViewBox: false,
-      colorFilter: key.colorFilter,
-    );
-    final image = await picture.toImage(
-      key.pixelWidth,
-      key.pixelHeight,
-    );
-    return ImageInfo(
-      image: image,
-      scale: key.scale,
-    );
+    return _loadAsync(key, svgRoot);
   }
 
   static Future<ImageInfo> _loadFileAsync(SvgImageKey key) async {
     final rawSvg = await File(key.path).readAsString();
     final svgRoot = await svg.fromSvgString(rawSvg, key.path);
-    final picture = svgRoot.toPicture(
-      size: Size(
-        key.pixelWidth.toDouble(),
-        key.pixelHeight.toDouble(),
-      ),
-      clipToViewBox: false,
-      colorFilter: key.colorFilter,
+    return _loadAsync(key, svgRoot);
+  }
+
+  static Future<ImageInfo> _loadAsync(
+      SvgImageKey key, DrawableRoot svgRoot) async {
+    if (svgRoot.viewport.viewBox.isEmpty) {
+      throw StateError('Invalid SVG data');
+    }
+    final scaleX = key.pixelWidth / svgRoot.viewport.viewBox.width;
+    final scaleY =
+        key.pixelHeight / svgRoot.viewport.viewBox.height;
+    final root = DrawableRoot(svgRoot.id, svgRoot.viewport, svgRoot.children,
+        svgRoot.definitions, svgRoot.style,
+        transform: Matrix4.diagonal3Values(scaleX, scaleY, 1).storage);
+    final bounds = svgRoot.viewport.viewBoxOffset.scale(scaleX, scaleY) &
+    Size(
+      svgRoot.viewport.viewBox.width * scaleX,
+      svgRoot.viewport.viewBox.height * scaleY,
     );
-    final image = await picture.toImage(
-      key.pixelWidth,
-      key.pixelHeight,
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, bounds);
+    if (key.colorFilter != null) {
+      canvas.saveLayer(null, Paint()..colorFilter = key.colorFilter);
+    } else {
+      canvas.save();
+    }
+    root.draw(canvas, bounds);
+    canvas.restore();
+    final image = await recorder.endRecording().toImage(
+      key.pixelWidth.toInt(),
+      key.pixelHeight.toInt(),
     );
     return ImageInfo(
       image: image,
