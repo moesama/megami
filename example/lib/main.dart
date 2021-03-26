@@ -18,6 +18,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  List<String> coverClass = ['.player-cover'];
+
   @override
   void initState() {
     super.initState();
@@ -83,11 +85,15 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             Row(
                               children: [
                                 GestureDetector(
-                                    child: Container().styled('.player-cover'),
+                                    child: Container().styled(coverClass),
                                   onTap: () {
-                                      // setState(() {
-                                        styleCubit.removeStyle('main');
-                                      // });
+                                      setState(() {
+                                        if (coverClass.contains('.active')) {
+                                          coverClass.remove('.active');
+                                        } else {
+                                          coverClass += ['.active'];
+                                        }
+                                      });
                                   },
                                 ),
                               ],

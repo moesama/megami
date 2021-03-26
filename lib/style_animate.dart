@@ -51,7 +51,7 @@ class _AnimatedDecorationBox extends ImplicitlyAnimatedWidget {
 
 class _AnimatedDecorationBoxState
     extends AnimatedWidgetBaseState<_AnimatedDecorationBox> {
-  late DecorationTween? _decoration;
+  DecorationTween? _decoration;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
