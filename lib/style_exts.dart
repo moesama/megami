@@ -29,7 +29,8 @@ extension _SelectorSequenceExt on SimpleSelectorSequence {
             .any((element) => simpleSelector.match(element, selector.index)) ??
         false;
     if (matched) {
-      if (isCombinatorGreater || isCombinatorDescendant) return selector!.parent;
+      if (isCombinatorGreater || isCombinatorDescendant)
+        return selector!.parent;
       if (isCombinatorPlus) return selector!.index > 0 ? selector : null;
       return selector;
     } else if (!strict && selector!.parent != null) {
@@ -329,8 +330,8 @@ Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
     group.declarations.whereType<Declaration>().forEach((declaration) {
       var type = _StyleComponent.typeOf(declaration);
       if (type != null) {
-        var component =
-            previousValue.putIfAbsent(type, () => _StyleComponent.create(type)!);
+        var component = previousValue.putIfAbsent(
+            type, () => _StyleComponent.create(type)!);
         component.merge(declaration, basePath: group.basePath);
       }
     });
@@ -354,7 +355,8 @@ extension StyleExt on Widget {
             );
     }
     if (selectors is List) {
-      var section = _SelectorSection(sections: selectors as List<String>, index: index);
+      var section =
+          _SelectorSection(sections: selectors as List<String>, index: index);
       return this is PreferredSizeWidget
           ? _PreferredSizeStyle(
               sizeProvider: () => (this as PreferredSizeWidget).preferredSize,
@@ -387,14 +389,12 @@ enum TextStyleType {
 }
 
 extension BuildContextExt on BuildContext {
-  Widget? styledText(
-      dynamic selectors,
+  Widget? styledText(dynamic selectors,
       {int index = -1,
       TextStyleType defaultStyleType = TextStyleType.BODY1,
-      required
-          Widget Function(BuildContext context, TextStyle? textStyle,
-                  TextAlign? textAlign)
-              builder}) {
+      required Widget Function(
+              BuildContext context, TextStyle? textStyle, TextAlign? textAlign)
+          builder}) {
     var defaultTextStyle = _textStyleFromType(defaultStyleType);
     if (selectors is String) {
       var section = _SelectorSection(sections: [selectors], index: index);
@@ -405,7 +405,8 @@ extension BuildContextExt on BuildContext {
       );
     }
     if (selectors is List) {
-      var section = _SelectorSection(sections: selectors as List<String>, index: index);
+      var section =
+          _SelectorSection(sections: selectors as List<String>, index: index);
       return _TextStyleWrapper(
         selector: section,
         defaultStyle: defaultTextStyle,
@@ -490,5 +491,23 @@ extension UriExt on Uri {
         break;
     }
     return provider;
+  }
+
+  double getScale() {
+    var fileName = path.split('/').lastOrNull;
+    if (fileName == null) return Dimens.pixelRatio;
+    var atIndex = fileName.lastIndexOf('@');
+    if (atIndex < 0) return Dimens.pixelRatio;
+    var sub = fileName.substring(atIndex);
+    switch (sub) {
+      case '@1x':
+        return 1;
+      case '@2x':
+        return 2;
+      case '@3x':
+        return 3;
+      default:
+        return Dimens.pixelRatio;
+    }
   }
 }

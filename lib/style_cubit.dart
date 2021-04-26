@@ -24,8 +24,8 @@ class CssBundle {
 class StyleCubit extends Cubit<List<StyleSheet>> {
   StyleCubit({List<StyleSheet> state = const []}) : super(state);
 
-  void addStyle(String key, String style, {String basePath = ''}) {
-    final list = _addStyle(key, style, origin: state, basePath: basePath);
+  Future addStyle(String key, String style, {String basePath = ''}) async {
+    final list = await _addStyle(key, style, origin: state, basePath: basePath);
     _notifyChanged(list);
   }
 
@@ -41,10 +41,10 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
     });
   }
 
-  void setCss(List<CssBundle> bundles) {
+  Future setCss(List<CssBundle> bundles) async {
     var origin = <StyleSheet>[];
-    Future.wait(bundles.map((e) => e.stylesheet.then((value) {
-      origin = _addStyle(e.key, value, origin: origin, basePath: e.basePath);
+    await Future.wait(bundles.map((e) => e.stylesheet.then((value) async {
+      origin = await _addStyle(e.key, value, origin: origin, basePath: e.basePath);
     }))).then((value) {
       if (value.isNotEmpty) {
         _notifyChanged(origin);
@@ -52,8 +52,9 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
     });
   }
 
-  List<StyleSheet> _addStyle(String key, String style, {List<StyleSheet>? origin, String basePath = ''}) {
-    final stylesheet = parse(style)
+  Future<List<StyleSheet>> _addStyle(String key, String style, {List<StyleSheet>? origin, String basePath = ''}) async {
+    final stylesheet = await compute(parse, style);
+    stylesheet
       ..basePath = basePath
       ..key = key;
     final list = origin?.toList(growable: true) ?? [];

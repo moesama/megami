@@ -5,8 +5,9 @@ final StyleCubit styleCubit = StyleCubit();
 class StyledScaffold extends StatelessWidget {
   final StyleCubit? style;
   final WidgetBuilder builder;
+  final Widget? placeholder;
 
-  const StyledScaffold({Key? key, required this.builder, this.style})
+  const StyledScaffold({Key? key, required this.builder, this.style, this.placeholder})
       : super(key: key);
 
   @override
@@ -16,7 +17,7 @@ class StyledScaffold extends StatelessWidget {
       create: (BuildContext context) => cubit,
       child: BlocBuilder<StyleCubit, List<StyleSheet>>(
         builder: (context, state) =>
-            state.isEmpty ? Container() : builder.call(context),
+            state.isEmpty ? placeholder ?? Container() : builder.call(context),
       ),
     );
   }

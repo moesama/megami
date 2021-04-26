@@ -36,147 +36,156 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
     }
     return MaterialApp(
-      home: StyledScaffold(builder: (context) {
-        return Scaffold(
-          // appBar: AppBar(
-          //   backgroundColor: Colors.transparent,
-          //   elevation: 0,
-          //   bottom: TabBar(
-          //     tabs: [
-          //       Row(
-          //         mainAxisAlignment: MainAxisAlignment.center,
-          //         children: [
-          //           Image.asset(
-          //             'assets/images/banner.jpg',
-          //             width: 16,
-          //             height: 16,
-          //           ),
-          //           Text('11111'),
-          //         ],
-          //       ),
-          //       Tab(text: '2222')
-          //     ],
-          //     controller: _tabController,
-          //   ).styled('.app-tab'),
-          // ).styled('.app-bar'),
-          body: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                elevation: 0,
-                brightness: Brightness.dark,
-                expandedHeight: 320,
-                backgroundColor: Colors.transparent,
-                pinned: false,
-                primary: true,
-                title: Center(
-                  child: TextField().styled('.search'),
-                ),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    children: [
-                      Container().styled('.banner').styled('.banner-wrap'),
-                      OverflowBox(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('NEXT SONG').styled('.appbar-subtitle'),
-                            Text('Mic Drop').styled('.appbar-title'),
-                            Text('BTS').styled('.appbar-text'),
-                            Row(
-                              children: [
-                                GestureDetector(
-                                    child: Container().styled(coverClass),
-                                  onTap: () {
-                                      setState(() {
-                                        if (coverClass.contains('.active')) {
-                                          coverClass.remove('.active');
-                                        } else {
-                                          coverClass += ['.active'];
-                                        }
-                                      });
-                                  },
-                                ),
-                              ],
-                            ).styled('.player-panel'),
-                          ],
-                        ).styled('.appbar-content'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Recently Listened Albums').styled('.section-title'),
-                    Text('MORE').styled('.section-op'),
-                  ],
-                ).styled('.section-header'),
-              ),
-              SliverToBoxAdapter(
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container().styled('.album-cover'),
-                        Text('Between').styled('.album-title'),
-                        Text('Motte').styled('.album-author'),
-                      ],
-                    ).styled('.album', index: min(index, 1));
-                  },
-                ).styled('.album-list'),
-              ),
-              SliverToBoxAdapter(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Recommendations').styled('.section-title'),
-                  ],
-                ).styled('.section-header'),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverGrid.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  children: [
-                    Container().styled('.song'),
-                    Container().styled('.song'),
-                    Container().styled('.song'),
-                    Container().styled('.song'),
-                    Container().styled('.song'),
-                    Container().styled('.song'),
-                  ],
-                ),
-              ),
-            ],
-          ).styled('.page-container'),
-          bottomNavigationBar: BottomNavigationBar(
-            showUnselectedLabels: false,
-            showSelectedLabels: false,
-            elevation: 0,
-            items: [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.music_note),
-                label: 'music',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                label: 'home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.account_circle_outlined),
-                label: 'my',
-              ),
-            ],
+      home: StyledScaffold(
+          placeholder: Scaffold(
+            backgroundColor: Colors.white,
+            body: Container(
+              color: Colors.white,
+            ),
           ),
-        );
-      }),
+          builder: (context) {
+            return Scaffold(
+              // appBar: AppBar(
+              //   backgroundColor: Colors.transparent,
+              //   elevation: 0,
+              //   bottom: TabBar(
+              //     tabs: [
+              //       Row(
+              //         mainAxisAlignment: MainAxisAlignment.center,
+              //         children: [
+              //           Image.asset(
+              //             'assets/images/banner.jpg',
+              //             width: 16,
+              //             height: 16,
+              //           ),
+              //           Text('11111'),
+              //         ],
+              //       ),
+              //       Tab(text: '2222')
+              //     ],
+              //     controller: _tabController,
+              //   ).styled('.app-tab'),
+              // ).styled('.app-bar'),
+              backgroundColor: Colors.white,
+              body: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    elevation: 0,
+                    brightness: Brightness.dark,
+                    expandedHeight: 320,
+                    backgroundColor: Colors.transparent,
+                    pinned: false,
+                    primary: true,
+                    title: Center(
+                      child: TextField().styled('.search'),
+                    ),
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Stack(
+                        children: [
+                          Container().styled('.banner').styled('.banner-wrap'),
+                          OverflowBox(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('NEXT SONG').styled('.appbar-subtitle'),
+                                Text('Mic Drop').styled('.appbar-title'),
+                                Text('BTS').styled('.appbar-text'),
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      child: Container().styled(coverClass),
+                                      onTap: () {
+                                        setState(() {
+                                          if (coverClass.contains('.active')) {
+                                            coverClass.remove('.active');
+                                          } else {
+                                            coverClass += ['.active'];
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ).styled('.player-panel'),
+                              ],
+                            ).styled('.appbar-content'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Recently Listened Albums')
+                            .styled('.section-title'),
+                        Text('MORE').styled('.section-op'),
+                      ],
+                    ).styled('.section-header'),
+                  ),
+                  SliverToBoxAdapter(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 10,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container().styled('.album-cover'),
+                            Text('Between').styled('.album-title'),
+                            Text('Motte').styled('.album-author'),
+                          ],
+                        ).styled('.album', index: min(index, 1));
+                      },
+                    ).styled('.album-list'),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Recommendations').styled('.section-title'),
+                      ],
+                    ).styled('.section-header'),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverGrid.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 15,
+                      mainAxisSpacing: 15,
+                      children: [
+                        Container().styled('.song'),
+                        Container().styled('.song'),
+                        Container().styled('.song'),
+                        Container().styled('.song'),
+                        Container().styled('.song'),
+                        Container().styled('.song'),
+                      ],
+                    ),
+                  ),
+                ],
+              ).styled('.page-container'),
+              bottomNavigationBar: BottomNavigationBar(
+                showUnselectedLabels: false,
+                showSelectedLabels: false,
+                elevation: 0,
+                items: [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.music_note),
+                    label: 'music',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home_outlined),
+                    label: 'home',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.account_circle_outlined),
+                    label: 'my',
+                  ),
+                ],
+              ),
+            );
+          }),
     );
   }
 }
