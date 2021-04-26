@@ -92,12 +92,12 @@ class Dimen {
       expression is PercentageTerm ||
       expression is EmTerm;
 
-  double dimension(BuildContext context, {double? fontSize = 0.0}) {
+  double dimension(BuildContext context, {double? fontSize = 0.0, double? pixelRatio}) {
     switch (unit) {
       case DimenUnit.PT:
         return size.toDouble();
       case DimenUnit.PX:
-        return size / Dimens.pixelRatio;
+        return size / (pixelRatio ?? Dimens.pixelRatio);
       case DimenUnit.SP:
         return size * Dimens.textScaleFactor;
       case DimenUnit.EM:
@@ -148,13 +148,8 @@ class Dimens {
 
   static double get pixelRatio {
     var mediaQuery = MediaQueryData.fromWindow(ui.window);
+    print(mediaQuery.devicePixelRatio);
     return mediaQuery.devicePixelRatio;
-  }
-
-  static double get designRatio {
-    var mediaQuery = MediaQueryData.fromWindow(ui.window);
-    print(mediaQuery.size);
-    return min(mediaQuery.size.width, mediaQuery.size.height) / 360;
   }
 
   static double get textScaleFactor {
