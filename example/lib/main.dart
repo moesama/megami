@@ -24,7 +24,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    styleCubit.setCss([CssBundle('main', 'asset://assets/style.css')]);
+    styleCubit.setCss([CssBundle('main', 'asset://assets/style.css'), CssBundle('test', 'asset://assets/style.css')]);
   }
 
   @override

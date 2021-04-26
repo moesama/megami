@@ -44,7 +44,7 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
   Future setCss(List<CssBundle> bundles) async {
     var origin = <StyleSheet>[];
     await Future.wait(bundles.map((e) => e.stylesheet.then((value) async {
-      origin = await _addStyle(e.key, value, origin: origin, basePath: e.basePath);
+      origin.addAll(await _addStyle(e.key, value, origin: origin, basePath: e.basePath));
     }))).then((value) {
       if (value.isNotEmpty) {
         _notifyChanged(origin);
