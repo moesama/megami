@@ -153,6 +153,7 @@ class Dimens {
 
   static double get designRatio {
     var mediaQuery = MediaQueryData.fromWindow(ui.window);
+    print(mediaQuery.size);
     return min(mediaQuery.size.width, mediaQuery.size.height) / 360;
   }
 

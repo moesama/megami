@@ -890,7 +890,7 @@ class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
       final provider = _uri!.toImage();
       if (provider != null) {
         image = DecorationImage(
-            image: provider, scale: _uri!.getScale(), fit: _fit, repeat: _repeat, alignment: _alignment);
+            image: provider, scale: _uri!.getScale() * Dimens.designRatio, fit: _fit, repeat: _repeat, alignment: _alignment);
       }
     }
     return _BackgroundCompose(color: _color, image: image, gradient: _gradient);
@@ -1162,7 +1162,7 @@ class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
             _centerSlice.right?.dimension(context) ?? 0,
             _centerSlice.bottom?.dimension(context) ?? 0,
           ),
-          scale: Dimens.designRatio,
+          scale: _uri!.getScale() * Dimens.designRatio,
         );
       }
     }
