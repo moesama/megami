@@ -1154,17 +1154,15 @@ class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
     if (_uri != null) {
       final provider = _uri!.toImage();
       if (provider != null) {
-        final scale = min(_uri!.getScale(), Dimens.pixelRatio);
-        final sliceScale = scale / _uri!.getScale();
         image = DecorationImage(
           image: provider,
           centerSlice: Rect.fromLTRB(
-              (_centerSlice.left?.dimension(context) ?? 0) * sliceScale,
-              (_centerSlice.top?.dimension(context) ?? 0) * sliceScale,
-              (_centerSlice.right?.dimension(context) ?? 0) * sliceScale,
-              (_centerSlice.bottom?.dimension(context) ?? 0) * sliceScale,
+            _centerSlice.left?.dimension(context) ?? 0,
+            _centerSlice.top?.dimension(context) ?? 0,
+            _centerSlice.right?.dimension(context) ?? 0,
+            _centerSlice.bottom?.dimension(context) ?? 0,
           ),
-          scale: scale,
+          scale: Dimens.designRatio,
         );
       }
     }

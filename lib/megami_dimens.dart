@@ -151,6 +151,11 @@ class Dimens {
     return mediaQuery.devicePixelRatio;
   }
 
+  static double get designRatio {
+    var mediaQuery = MediaQueryData.fromWindow(ui.window);
+    return min(mediaQuery.size.width, mediaQuery.size.height) / 360;
+  }
+
   static double get textScaleFactor {
     var mediaQuery = MediaQueryData.fromWindow(ui.window);
     return mediaQuery.textScaleFactor;
