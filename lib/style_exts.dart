@@ -498,7 +498,7 @@ extension UriExt on Uri {
     if (fileName == null) return Dimens.pixelRatio;
     final atIndex = fileName.lastIndexOf('@');
     if (atIndex < 0) return Dimens.pixelRatio;
-    final sub = fileName.substring(atIndex).split('.').firstOrNull;
+    final sub = fileName.substring(atIndex).split('\.').firstOrNull;
     switch (sub) {
       case '@1x':
         return 1;
