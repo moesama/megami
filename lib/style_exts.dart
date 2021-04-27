@@ -494,11 +494,11 @@ extension UriExt on Uri {
   }
 
   double getScale() {
-    var fileName = path.split('/').lastOrNull;
+    final fileName = path.split('/').lastOrNull;
     if (fileName == null) return Dimens.pixelRatio;
-    var atIndex = fileName.lastIndexOf('@');
+    final atIndex = fileName.lastIndexOf('@');
     if (atIndex < 0) return Dimens.pixelRatio;
-    var sub = fileName.substring(atIndex);
+    final sub = fileName.substring(atIndex).split('.').firstOrNull;
     switch (sub) {
       case '@1x':
         return 1;
