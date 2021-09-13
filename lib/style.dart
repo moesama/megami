@@ -24,13 +24,6 @@ class StyledScaffold extends StatelessWidget {
   }
 }
 
-class _ComputeBundle {
-  final _SelectorSection selector;
-  final List<StyleSheet> styles;
-
-  _ComputeBundle(this.selector, this.styles);
-}
-
 class _ComputedStyle {
   final Map<Selector, DeclarationGroup> matched = {};
   final Map<Type, StyleComponent> styles = {};
@@ -50,66 +43,34 @@ class _SelectorSection {
   final List<String> sections;
   final int index;
 
+  _ComputedStyle? _privateStyle;
+
   static final Map<_SelectorSection, _ComputedStyle> store = {};
+
+  static _ComputedStyle? getComputedStyle(_SelectorSection selector) =>
+      store.entries
+          .firstWhereOrNull((element) => element.key == selector)
+          ?.value;
+
+  static _ComputedStyle createComputedStyle(_SelectorSection selector) {
+    var style = _ComputedStyle();
+    store[selector.copy()] = style;
+    return style;
+  }
 
   static void reset() {
     store.clear();
   }
 
-  static _ComputedStyle resolve(_ComputeBundle bundle) {
-    if (store.containsKey(bundle.selector)) {
-      return store[bundle.selector]!;
-    }
-    print('resolve start ===================> ${DateTime.now().millisecond}');
-    final style = _ComputedStyle();
-    bundle.styles.forEach((stylesheet) {
-      stylesheet.ruleSets.forEach((ruleSet) {
-        var matched = ruleSet.selectorGroup.selectors
-            .where((s) => s.match(bundle.selector));
-        matched.forEach((selector) {
-          style.matched[selector] = ruleSet.declarationGroup
-            ..basePath = stylesheet.basePath;
-        });
-      });
-    });
+  _ComputedStyle? get computeStyle => _privateStyle ?? getComputedStyle(this);
 
-    var sortedEntries =
-        style.matched.entries.where((e) => !e.key.isElement).toList();
-    sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-    print('merge end ===================> ${DateTime.now().millisecond}');
-    style.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
-    print('merge end ===================> ${DateTime.now().millisecond}');
-    sortedEntries =
-        style.matched.entries.where((e) => e.key.isElement).toList();
-    sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-    style.elementStyles.clear();
-    final elements = {
-      for (var e in sortedEntries)
-        e.key.simpleSelectorSequences.last.simpleSelector
-                as PseudoElementSelector:
-            sortedEntries
-                .where((element) => element.key == e.key)
-                .map((e) => e.value)
-                .toList()
-    };
-    elements.forEach((key, value) {
-      style.elementStyles[key] = _merge(value);
-    });
-    store[bundle.selector.copy()] = style;
-    print('resolve end ===================> ${DateTime.now().millisecond}');
-    return style;
-  }
-
-  _ComputedStyle? get computeStyle => _SelectorSection.store[this];
-
-  _SelectorSection(
-      {this.parent, required List<String> sections, this.index = -1})
+  _SelectorSection({this.parent, required List<String> sections, this.index = -1})
       : sections = sections.toList(growable: true) {
     this.sections.sort((a, b) => a.compareTo(b));
   }
 
   _SelectorSection copy(
-          {_SelectorSection? parent, List<String>? sections, int? index}) =>
+      {_SelectorSection? parent, List<String>? sections, int? index}) =>
       _SelectorSection(
         parent: parent?.copy() ?? this.parent?.copy(),
         sections: sections ?? this.sections.toList(),
@@ -143,6 +104,45 @@ class _Style extends StatelessWidget {
     assert(child != null || builder != null);
   }
 
+  void _resolve(List<StyleSheet> styles) {
+    var store = _SelectorSection.getComputedStyle(selector);
+    if (store == null) {
+      store = _SelectorSection.createComputedStyle(selector);
+      styles.forEach((stylesheet) {
+        stylesheet.ruleSets.forEach((ruleSet) {
+          var matched = ruleSet.selectorGroup.selectors
+              .where((s) => s.match(selector));
+          matched.forEach((selector) {
+            store!.matched[selector] = ruleSet.declarationGroup
+              ..basePath = stylesheet.basePath;
+          });
+        });
+      });
+
+      var sortedEntries =
+      store.matched.entries.where((e) => !e.key.isElement).toList();
+      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+      store.styles.clear();
+      store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
+      sortedEntries =
+          store.matched.entries.where((e) => e.key.isElement).toList();
+      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+      store.elementStyles.clear();
+      final elements = {
+        for (var e in sortedEntries)
+          e.key.simpleSelectorSequences.last.simpleSelector
+          as PseudoElementSelector:
+          sortedEntries
+              .where((element) => element.key == e.key)
+              .map((e) => e.value)
+              .toList()
+      };
+      elements.forEach((key, value) {
+        store!.elementStyles[key] = _merge(value);
+      });
+    }
+  }
+
   Widget _applyStyle(
       BuildContext context, Widget child, _ComputedStyle? style) {
     var res = child;
@@ -170,8 +170,8 @@ class _Style extends StatelessWidget {
     return BlocBuilder<StyleCubit, List<StyleSheet>>(
         builder: (BuildContext context, List<StyleSheet> state) {
       if (state.isNotEmpty) {
-        final style = _SelectorSection.resolve(_ComputeBundle(selector, state));
-        return _applyStyle(context, builder?.call(context) ?? child!, style);
+        _resolve(state);
+        return _applyStyle(context, builder?.call(context) ?? child!, selector.computeStyle);
       }
       return builder?.call(context) ?? child ?? Container();
     });
