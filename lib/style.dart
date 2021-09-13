@@ -104,7 +104,7 @@ class _Style extends StatelessWidget {
     assert(child != null || builder != null);
   }
 
-  void _resolve(List<StyleSheet> styles) {
+  static void _resolve(_SelectorSection selector, List<StyleSheet> styles) {
     var store = _SelectorSection.getComputedStyle(selector);
     if (store == null) {
       store = _SelectorSection.createComputedStyle(selector);
@@ -113,8 +113,7 @@ class _Style extends StatelessWidget {
           var matched = ruleSet.selectorGroup.selectors
               .where((s) => s.match(selector));
           matched.forEach((selector) {
-            store!.matched[selector] = ruleSet.declarationGroup
-              ..basePath = stylesheet.basePath;
+            store!.matched[selector] = ruleSet.declarationGroup;
           });
         });
       });
@@ -170,7 +169,7 @@ class _Style extends StatelessWidget {
     return BlocBuilder<StyleCubit, List<StyleSheet>>(
         builder: (BuildContext context, List<StyleSheet> state) {
       if (state.isNotEmpty) {
-        _resolve(state);
+        _resolve(selector, state);
         return _applyStyle(context, builder?.call(context) ?? child!, selector.computeStyle);
       }
       return builder?.call(context) ?? child ?? Container();

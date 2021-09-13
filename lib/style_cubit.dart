@@ -43,16 +43,19 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
 
   Future setCss(List<CssBundle> bundles) async {
     var origin = <StyleSheet>[];
-    await Future.wait(bundles.map((e) => e.stylesheet.then((value) async {
-      origin.addAll(await _addStyle(e.key, value, origin: origin, basePath: e.basePath));
-    }))).then((value) {
+    await Future.wait(bundles.map((e) =>
+        e.stylesheet.then((value) async {
+          origin.addAll(await _addStyle(e.key, value,
+              origin: origin, basePath: e.basePath));
+        }))).then((value) {
       if (value.isNotEmpty) {
         _notifyChanged(origin);
       }
     });
   }
 
-  Future<List<StyleSheet>> _addStyle(String key, String style, {List<StyleSheet>? origin, String basePath = ''}) async {
+  Future<List<StyleSheet>> _addStyle(String key, String style,
+      {List<StyleSheet>? origin, String basePath = ''}) async {
     final stylesheet = await compute(parse, style);
     stylesheet
       ..basePath = basePath
@@ -69,6 +72,30 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
   void _notifyChanged(List<StyleSheet> list) {
     // clear component cache
     _SelectorSection.reset();
+    final sl = <_SelectorSection>[];
+    list.forEach((element) {
+      element.ruleSets.forEach((element) {
+        element.selectorGroup.selectors.forEach((s) {
+          final selector = _SelectorSection(sections: []);
+          s.simpleSelectorSequences.reversed.fold(selector,
+                  (_SelectorSection previousValue, element) {
+                previousValue.sections.add(element.simpleSelector.name);
+                if (element.isCombinatorNone) {
+                  return previousValue;
+                }
+                final parent = _SelectorSection(sections: []);
+                previousValue.parent = parent;
+                return parent;
+              });
+          if (!sl.contains(selector)) {
+            sl.add(selector);
+          }
+        });
+      });
+    });
+    sl.forEach((element) {
+      _Style._resolve(element, list);
+    });
     emit(list);
   }
 }
