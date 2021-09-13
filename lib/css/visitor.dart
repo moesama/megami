@@ -296,7 +296,7 @@ class Visitor implements VisitorBase {
 
   @override
   dynamic visitRuleSet(RuleSet node) {
-    visitSelectorGroup(node.selectorGroup!);
+    visitSelectorGroup(node.selectorGroup);
     visitDeclarationGroup(node.declarationGroup);
   }
 

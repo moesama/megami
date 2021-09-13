@@ -30,8 +30,10 @@ class Identifier extends TreeNode {
 
 class Wildcard extends TreeNode {
   Wildcard(SourceSpan? span) : super(span);
+
   @override
   Wildcard clone() => Wildcard(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitWildcard(this);
 
@@ -40,8 +42,10 @@ class Wildcard extends TreeNode {
 
 class ThisOperator extends TreeNode {
   ThisOperator(SourceSpan? span) : super(span);
+
   @override
   ThisOperator clone() => ThisOperator(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitThisOperator(this);
 
@@ -50,8 +54,10 @@ class ThisOperator extends TreeNode {
 
 class Negation extends TreeNode {
   Negation(SourceSpan? span) : super(span);
+
   @override
   Negation clone() => Negation(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitNegation(this);
 
@@ -69,6 +75,7 @@ class CalcTerm extends LiteralTerm {
 
   @override
   CalcTerm clone() => CalcTerm(value, text, expr.clone(), span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitCalcTerm(this);
 
@@ -81,8 +88,10 @@ class CssComment extends TreeNode {
   final String comment;
 
   CssComment(this.comment, SourceSpan? span) : super(span);
+
   @override
   CssComment clone() => CssComment(comment, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitCssComment(this);
 }
@@ -90,8 +99,10 @@ class CssComment extends TreeNode {
 // CDO/CDC (Comment Definition Open <!-- and Comment Definition Close -->).
 class CommentDefinition extends CssComment {
   CommentDefinition(String comment, SourceSpan? span) : super(comment, span);
+
   @override
   CommentDefinition clone() => CommentDefinition(comment, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitCommentDefinition(this);
 }
@@ -140,9 +151,13 @@ class SimpleSelectorSequence extends TreeNode {
         super(span);
 
   bool get isCombinatorNone => combinator == TokenKind.COMBINATOR_NONE;
+
   bool get isCombinatorPlus => combinator == TokenKind.COMBINATOR_PLUS;
+
   bool get isCombinatorGreater => combinator == TokenKind.COMBINATOR_GREATER;
+
   bool get isCombinatorTilde => combinator == TokenKind.COMBINATOR_TILDE;
+
   bool get isCombinatorDescendant =>
       combinator == TokenKind.COMBINATOR_DESCENDANT;
 
@@ -193,6 +208,7 @@ abstract class SimpleSelector extends TreeNode {
 // element name
 class ElementSelector extends SimpleSelector {
   ElementSelector(name, SourceSpan? span) : super(name, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitElementSelector(this);
 
@@ -305,8 +321,10 @@ class AttributeSelector extends SimpleSelector {
 // #id
 class IdSelector extends SimpleSelector {
   IdSelector(Identifier name, SourceSpan? span) : super(name, span);
+
   @override
   IdSelector clone() => IdSelector(_name as Identifier, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitIdSelector(this);
 
@@ -317,8 +335,10 @@ class IdSelector extends SimpleSelector {
 // .class
 class ClassSelector extends SimpleSelector {
   ClassSelector(Identifier name, SourceSpan? span) : super(name, span);
+
   @override
   ClassSelector clone() => ClassSelector(_name as Identifier, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitClassSelector(this);
 
@@ -329,6 +349,7 @@ class ClassSelector extends SimpleSelector {
 // :pseudoClass
 class PseudoClassSelector extends SimpleSelector {
   PseudoClassSelector(Identifier name, SourceSpan? span) : super(name, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitPseudoClassSelector(this);
 
@@ -347,6 +368,7 @@ class PseudoElementSelector extends SimpleSelector {
   PseudoElementSelector(Identifier name, SourceSpan? span,
       {this.isLegacy = false})
       : super(name, span);
+
   @override
   dynamic visit(VisitorBase visitor) =>
       visitor.visitPseudoElementSelector(this);
@@ -371,6 +393,7 @@ class PseudoClassFunctionSelector extends PseudoClassSelector {
       PseudoClassFunctionSelector(_name as Identifier, argument, span);
 
   Selector get selector => argument as Selector;
+
   SelectorExpression get expression => argument as SelectorExpression;
 
   @override
@@ -469,16 +492,19 @@ class StyleSheet extends TreeNode {
 
 class TopLevelProduction extends TreeNode {
   TopLevelProduction(SourceSpan? span) : super(span);
+
   @override
   SourceSpan get span => super.span!;
+
   @override
   TopLevelProduction clone() => TopLevelProduction(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitTopLevelProduction(this);
 }
 
 class RuleSet extends TopLevelProduction {
-  final SelectorGroup? selectorGroup;
+  final SelectorGroup selectorGroup;
   final DeclarationGroup declarationGroup;
 
   RuleSet(this.selectorGroup, this.declarationGroup, SourceSpan? span)
@@ -486,7 +512,7 @@ class RuleSet extends TopLevelProduction {
 
   @override
   RuleSet clone() {
-    var cloneSelectorGroup = selectorGroup!.clone();
+    var cloneSelectorGroup = selectorGroup.clone();
     var cloneDeclarationGroup = declarationGroup.clone();
     return RuleSet(cloneSelectorGroup, cloneDeclarationGroup, span);
   }
@@ -506,6 +532,7 @@ class Directive extends TreeNode {
 
   @override
   Directive clone() => Directive(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitDirective(this);
 }
@@ -557,6 +584,7 @@ class SupportsDirective extends Directive {
 
 abstract class SupportsCondition extends TreeNode {
   SupportsCondition(SourceSpan? span) : super(span);
+
   @override
   SourceSpan get span => super.span!;
 }
@@ -717,9 +745,11 @@ class MediaQuery extends TreeNode {
       : super(span);
 
   bool get hasMediaType => _mediaType != null;
+
   String get mediaType => _mediaType!.name;
 
   bool get hasUnary => _mediaUnary != -1;
+
   String get unary =>
       TokenKind.idToValue(TokenKind.MEDIA_OPERATORS, _mediaUnary)!
           .toUpperCase();
@@ -803,6 +833,7 @@ class PageDirective extends Directive {
   dynamic visit(VisitorBase visitor) => visitor.visitPageDirective(this);
 
   bool get hasIdent => _ident?.isNotEmpty ?? false;
+
   bool get hasPseudoPage => _pseudoPage?.isNotEmpty ?? false;
 }
 
@@ -810,8 +841,10 @@ class CharsetDirective extends Directive {
   final String charEncoding;
 
   CharsetDirective(this.charEncoding, SourceSpan? span) : super(span);
+
   @override
   CharsetDirective clone() => CharsetDirective(charEncoding, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitCharsetDirective(this);
 }
@@ -868,6 +901,7 @@ class KeyFrameBlock extends Expression {
   @override
   KeyFrameBlock clone() =>
       KeyFrameBlock(_blockSelectors.clone(), _declarations.clone(), span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitKeyFrameBlock(this);
 }
@@ -879,6 +913,7 @@ class FontFaceDirective extends Directive {
 
   @override
   FontFaceDirective clone() => FontFaceDirective(_declarations.clone(), span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitFontFaceDirective(this);
 }
@@ -892,6 +927,7 @@ class StyletDirective extends Directive {
 
   @override
   bool get isBuiltIn => false;
+
   @override
   bool get isExtension => true;
 
@@ -1132,8 +1168,20 @@ class DeclarationGroup extends TreeNode {
 
   /// Can be either Declaration or RuleSet (if nested selector).
   final List<TreeNode> declarations;
+  final Map<Type, StyleComponent> styles = {};
 
   DeclarationGroup(this.declarations, SourceSpan? span) : super(span);
+
+  void resolve() {
+    declarations.whereType<Declaration>().forEach((declaration) {
+      var type = StyleComponent.typeOf(declaration);
+      if (type != null) {
+        var component =
+            styles.putIfAbsent(type, () => StyleComponent.create(type)!);
+        component.merge(declaration, basePath: basePath);
+      }
+    });
+  }
 
   @override
   SourceSpan get span => super.span!;
@@ -1153,9 +1201,11 @@ class MarginGroup extends DeclarationGroup {
 
   MarginGroup(this.margin_sym, List<TreeNode> decls, SourceSpan? span)
       : super(decls, span);
+
   @override
   MarginGroup clone() =>
       MarginGroup(margin_sym, super.clone().declarations, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitMarginGroup(this);
 }
@@ -1181,32 +1231,40 @@ class VarUsage extends Expression {
 
 class OperatorSlash extends Expression {
   OperatorSlash(SourceSpan? span) : super(span);
+
   @override
   OperatorSlash clone() => OperatorSlash(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitOperatorSlash(this);
 }
 
 class OperatorComma extends Expression {
   OperatorComma(SourceSpan? span) : super(span);
+
   @override
   OperatorComma clone() => OperatorComma(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitOperatorComma(this);
 }
 
 class OperatorPlus extends Expression {
   OperatorPlus(SourceSpan? span) : super(span);
+
   @override
   OperatorPlus clone() => OperatorPlus(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitOperatorPlus(this);
 }
 
 class OperatorMinus extends Expression {
   OperatorMinus(SourceSpan? span) : super(span);
+
   @override
   OperatorMinus clone() => OperatorMinus(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitOperatorMinus(this);
 }
@@ -1244,8 +1302,10 @@ class LiteralTerm extends Expression {
 
 class NumberTerm extends LiteralTerm {
   NumberTerm(value, String t, SourceSpan? span) : super(value, t, span);
+
   @override
   NumberTerm clone() => NumberTerm(value, text, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitNumberTerm(this);
 }
@@ -1280,32 +1340,40 @@ class LengthTerm extends UnitTerm {
         this.unit == TokenKind.UNIT_LENGTH_PC ||
         this.unit == TokenKind.UNIT_LENGTH_SP);
   }
+
   @override
   LengthTerm clone() => LengthTerm(value, text, span, unit);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitLengthTerm(this);
 }
 
 class PercentageTerm extends LiteralTerm {
   PercentageTerm(value, String t, SourceSpan? span) : super(value, t, span);
+
   @override
   PercentageTerm clone() => PercentageTerm(value, text, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitPercentageTerm(this);
 }
 
 class EmTerm extends LiteralTerm {
   EmTerm(value, String t, SourceSpan? span) : super(value, t, span);
+
   @override
   EmTerm clone() => EmTerm(value, text, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitEmTerm(this);
 }
 
 class ExTerm extends LiteralTerm {
   ExTerm(value, String t, SourceSpan? span) : super(value, t, span);
+
   @override
   ExTerm clone() => ExTerm(value, text, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitExTerm(this);
 }
@@ -1322,6 +1390,7 @@ class AngleTerm extends UnitTerm {
 
   @override
   AngleTerm clone() => AngleTerm(value, text, span, unit);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitAngleTerm(this);
 }
@@ -1337,6 +1406,7 @@ class TimeTerm extends UnitTerm {
 
   @override
   TimeTerm clone() => TimeTerm(value, text, span, unit);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitTimeTerm(this);
 }
@@ -1350,6 +1420,7 @@ class FreqTerm extends UnitTerm {
 
   @override
   FreqTerm clone() => FreqTerm(value, text, span, unit);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitFreqTerm(this);
 }
@@ -1359,6 +1430,7 @@ class FractionTerm extends LiteralTerm {
 
   @override
   FractionTerm clone() => FractionTerm(value, text, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitFractionTerm(this);
 }
@@ -1368,6 +1440,7 @@ class UriTerm extends LiteralTerm {
 
   @override
   UriTerm clone() => UriTerm(value as String, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitUriTerm(this);
 }
@@ -1383,6 +1456,7 @@ class ResolutionTerm extends UnitTerm {
 
   @override
   ResolutionTerm clone() => ResolutionTerm(value, text, span, unit);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitResolutionTerm(this);
 }
@@ -1396,6 +1470,7 @@ class ChTerm extends UnitTerm {
 
   @override
   ChTerm clone() => ChTerm(value, text, span, unit);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitChTerm(this);
 }
@@ -1409,6 +1484,7 @@ class RemTerm extends UnitTerm {
 
   @override
   RemTerm clone() => RemTerm(value, text, span, unit);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitRemTerm(this);
 }
@@ -1425,6 +1501,7 @@ class ViewportTerm extends UnitTerm {
 
   @override
   ViewportTerm clone() => ViewportTerm(value, text, span, unit);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitViewportTerm(this);
 }
@@ -1437,6 +1514,7 @@ class HexColorTerm extends LiteralTerm {
 
   @override
   HexColorTerm clone() => HexColorTerm(value, text, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitHexColorTerm(this);
 }
@@ -1454,6 +1532,7 @@ class FunctionTerm extends LiteralTerm {
 
   @override
   FunctionTerm clone() => FunctionTerm(value, text, params.clone(), span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitFunctionTerm(this);
 }
@@ -1471,6 +1550,7 @@ class GroupTerm extends Expression {
 
   @override
   GroupTerm clone() => GroupTerm(span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitGroupTerm(this);
 }
@@ -1480,6 +1560,7 @@ class ItemTerm extends NumberTerm {
 
   @override
   ItemTerm clone() => ItemTerm(value, text, span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitItemTerm(this);
 }
@@ -1544,6 +1625,7 @@ class BinaryExpression extends Expression {
 
   @override
   BinaryExpression clone() => BinaryExpression(op, x.clone(), y.clone(), span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitBinaryExpression(this);
 }
@@ -1556,6 +1638,7 @@ class UnaryExpression extends Expression {
 
   @override
   UnaryExpression clone() => UnaryExpression(op, self.clone(), span);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitUnaryExpression(this);
 }
@@ -1580,12 +1663,19 @@ abstract class DartStyleExpression extends TreeNode {
   DartStyleExpression? merged(DartStyleExpression newDartExpr);
 
   bool get isUnknown => _styleType == 0 || _styleType == null;
+
   bool get isFont => _styleType == fontStyle;
+
   bool get isMargin => _styleType == marginStyle;
+
   bool get isBorder => _styleType == borderStyle;
+
   bool get isPadding => _styleType == paddingStyle;
+
   bool get isHeight => _styleType == heightStyle;
+
   bool get isWidth => _styleType == widthStyle;
+
   bool get isBoxExpression => isMargin || isBorder || isPadding;
 
   bool isSame(DartStyleExpression other) => _styleType == other._styleType;
@@ -1770,6 +1860,7 @@ class HeightExpression extends DartStyleExpression {
 
   @override
   HeightExpression clone() => HeightExpression(span, height);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitHeightExpression(this);
 }
@@ -1791,6 +1882,7 @@ class WidthExpression extends DartStyleExpression {
 
   @override
   WidthExpression clone() => WidthExpression(span, width);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitWidthExpression(this);
 }
@@ -1829,6 +1921,7 @@ class PaddingExpression extends BoxExpression {
   @override
   PaddingExpression clone() => PaddingExpression(span,
       top: box!.top, right: box!.right, bottom: box!.bottom, left: box!.left);
+
   @override
   dynamic visit(VisitorBase visitor) => visitor.visitPaddingExpression(this);
 }

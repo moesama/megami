@@ -1,7 +1,9 @@
 part of megami;
 
-abstract class _StyleComponent<T> {
+abstract class StyleComponent<T> {
   void merge(Declaration declaration, {String? basePath});
+
+  StyleComponent<T> mergeWith(StyleComponent<T> component);
 
   T build(BuildContext context);
 
@@ -95,7 +97,7 @@ abstract class _StyleComponent<T> {
     }
   }
 
-  static _StyleComponent? create(Type? type) {
+  static StyleComponent? create(Type? type) {
     switch (type) {
       case _ConstraintsComponent:
         return _ConstraintsComponent();
@@ -139,7 +141,7 @@ abstract class _StyleComponent<T> {
   }
 
   static Widget decorate(BuildContext context, Widget widget,
-      {Iterable<_StyleComponent>? components}) {
+      {Iterable<StyleComponent>? components}) {
     if (components == null || components.isEmpty) {
       return widget;
     }
@@ -472,7 +474,7 @@ abstract class _StyleComponent<T> {
   }
 
   static Widget decorateText(BuildContext context, _TextStyleWrapper wrapper,
-      {Iterable<_StyleComponent>? components}) {
+      {Iterable<StyleComponent>? components}) {
     var textAlign = components
         ?.whereType<_TextAlignComponent>()
         .firstOrNull
@@ -483,7 +485,7 @@ abstract class _StyleComponent<T> {
   }
 
   static TabBar decorateTabIndicator(BuildContext context, TabBar tabBar,
-      {Iterable<_StyleComponent>? components}) {
+      {Iterable<StyleComponent>? components}) {
     if (components == null || components.isEmpty) {
       return tabBar;
     }
@@ -534,7 +536,7 @@ abstract class _StyleComponent<T> {
   }
 
   static TabBar decorateTabControl(BuildContext context, TabBar tabBar,
-      {Iterable<_StyleComponent>? components, bool selected = false}) {
+      {Iterable<StyleComponent>? components, bool selected = false}) {
     if (components == null || components.isEmpty) {
       return tabBar;
     }
@@ -574,7 +576,7 @@ abstract class _StyleComponent<T> {
   // }
 
   static TextStyle? _merge(BuildContext context, TextStyle? origin,
-      {Iterable<_StyleComponent>? components, bool excludeColor = false}) {
+      {Iterable<StyleComponent>? components, bool excludeColor = false}) {
     var textColor = excludeColor
         ? null
         : components
@@ -593,9 +595,10 @@ abstract class _StyleComponent<T> {
       fontFamily: font?.font.fontsAsString,
       fontStyle: font?.font.style,
       fontWeight: fontWeight,
-      height:
-          (font?.font.lineHeight?.dimension(context, fontSize: fontSize) ?? fontSize ?? 1) /
-              (fontSize ?? 1),
+      height: (font?.font.lineHeight?.dimension(context, fontSize: fontSize) ??
+              fontSize ??
+              1) /
+          (fontSize ?? 1),
     );
   }
 }
@@ -674,7 +677,7 @@ class _TransformCompose {
   _TransformCompose({required this.matrix, this.origin, this.isSkew});
 }
 
-class _ConstraintsComponent extends _StyleComponent<BoxConstraints> {
+class _ConstraintsComponent extends StyleComponent<BoxConstraints> {
   Dimen? _width;
   Dimen? _height;
   Dimen? _minWidth;
@@ -711,6 +714,19 @@ class _ConstraintsComponent extends _StyleComponent<BoxConstraints> {
   }
 
   @override
+  StyleComponent<BoxConstraints> mergeWith(
+      StyleComponent<BoxConstraints> component) {
+    final target = component as _ConstraintsComponent;
+    return _ConstraintsComponent()
+      .._width = target._width ?? _width
+      .._height = target._height ?? _height
+      .._minWidth = target._minWidth ?? _minWidth
+      .._minHeight = target._minHeight ?? _minHeight
+      .._maxWidth = target._maxWidth ?? _maxWidth
+      .._maxHeight = target._maxHeight ?? _maxHeight;
+  }
+
+  @override
   BoxConstraints build(BuildContext context) => BoxConstraints(
         minWidth:
             _minWidth?.dimension(context) ?? _width?.dimension(context) ?? 0.0,
@@ -726,7 +742,7 @@ class _ConstraintsComponent extends _StyleComponent<BoxConstraints> {
       );
 }
 
-class _PaddingComponent extends _StyleComponent<EdgeInsets> {
+class _PaddingComponent extends StyleComponent<EdgeInsets> {
   final _Vector4<Dimen> _padding = _Vector4();
 
   @override
@@ -758,6 +774,16 @@ class _PaddingComponent extends _StyleComponent<EdgeInsets> {
   }
 
   @override
+  StyleComponent<EdgeInsets> mergeWith(StyleComponent<EdgeInsets> component) {
+    final target = component as _PaddingComponent;
+    return _PaddingComponent()
+      .._padding.top = target._padding.top ?? _padding.top
+      .._padding.left = target._padding.left ?? _padding.left
+      .._padding.bottom = target._padding.bottom ?? _padding.bottom
+      .._padding.right = target._padding.right ?? _padding.right;
+  }
+
+  @override
   EdgeInsets build(BuildContext context) {
     return EdgeInsets.only(
       top: _padding.top != null ? _padding.top!.dimension(context) : 0,
@@ -768,7 +794,7 @@ class _PaddingComponent extends _StyleComponent<EdgeInsets> {
   }
 }
 
-class _MarginComponent extends _StyleComponent<EdgeInsets> {
+class _MarginComponent extends StyleComponent<EdgeInsets> {
   final _Vector4<Dimen> _margin = _Vector4();
 
   @override
@@ -800,6 +826,16 @@ class _MarginComponent extends _StyleComponent<EdgeInsets> {
   }
 
   @override
+  StyleComponent<EdgeInsets> mergeWith(StyleComponent<EdgeInsets> component) {
+    final target = component as _MarginComponent;
+    return _MarginComponent()
+      .._margin.top = target._margin.top ?? _margin.top
+      .._margin.left = target._margin.left ?? _margin.left
+      .._margin.bottom = target._margin.bottom ?? _margin.bottom
+      .._margin.right = target._margin.right ?? _margin.right;
+  }
+
+  @override
   EdgeInsets build(BuildContext context) => EdgeInsets.only(
         top: _margin.top != null ? _margin.top!.dimension(context) : 0,
         right: _margin.right != null ? _margin.right!.dimension(context) : 0,
@@ -808,7 +844,7 @@ class _MarginComponent extends _StyleComponent<EdgeInsets> {
       );
 }
 
-class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
+class _BackgroundComponent extends StyleComponent<_BackgroundCompose> {
   Color? _color;
   Uri? _uri;
   BoxFit _fit = BoxFit.none;
@@ -821,6 +857,18 @@ class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
     _mergeColor(declaration);
     _mergeImage(declaration, basePath);
     _mergeGradient(declaration);
+  }
+
+  @override
+  StyleComponent<_BackgroundCompose> mergeWith(
+      StyleComponent<_BackgroundCompose> component) {
+    final target = component as _BackgroundComponent;
+    return _BackgroundComponent()
+      .._color = target._color ?? _color
+      .._uri = target._uri ?? _uri
+      .._fit = target._fit
+      .._repeat = target._repeat
+      .._gradient = target._gradient ?? _gradient;
   }
 
   void _mergeColor(Declaration declaration) {
@@ -890,14 +938,18 @@ class _BackgroundComponent extends _StyleComponent<_BackgroundCompose> {
       final provider = _uri!.toImage();
       if (provider != null) {
         image = DecorationImage(
-            image: provider, scale: Dimens.pixelRatio, fit: _fit, repeat: _repeat, alignment: _alignment);
+            image: provider,
+            scale: Dimens.pixelRatio,
+            fit: _fit,
+            repeat: _repeat,
+            alignment: _alignment);
       }
     }
     return _BackgroundCompose(color: _color, image: image, gradient: _gradient);
   }
 }
 
-class _BackgroundBlendModeComponent extends _StyleComponent<BlendMode?> {
+class _BackgroundBlendModeComponent extends StyleComponent<BlendMode?> {
   BlendMode? _blendMode;
 
   @override
@@ -906,10 +958,17 @@ class _BackgroundBlendModeComponent extends _StyleComponent<BlendMode?> {
   }
 
   @override
+  StyleComponent<BlendMode?> mergeWith(StyleComponent<BlendMode?> component) {
+    final target = component as _BackgroundBlendModeComponent;
+    return _BackgroundBlendModeComponent()
+      .._blendMode = target._blendMode ?? _blendMode;
+  }
+
+  @override
   BlendMode? build(BuildContext context) => _blendMode;
 }
 
-class _BorderComponent extends _StyleComponent<Border> {
+class _BorderComponent extends StyleComponent<Border> {
   final _Vector4<Dimen> _width = _Vector4<Dimen>();
   final _Vector4<Color> _color = _Vector4<Color>().all(Colors.black);
 
@@ -919,13 +978,28 @@ class _BorderComponent extends _StyleComponent<Border> {
     _mergeColor(declaration);
   }
 
+  @override
+  StyleComponent<Border> mergeWith(StyleComponent<Border> component) {
+    final target = component as _BorderComponent;
+    return _BorderComponent()
+      .._width.top = target._width.top ?? _width.top
+      .._width.left = target._width.left ?? _width.left
+      .._width.bottom = target._width.bottom ?? _width.bottom
+      .._width.right = target._width.right ?? _width.right
+      .._color.top = target._color.top ?? _color.top
+      .._color.left = target._color.left ?? _color.left
+      .._color.bottom = target._color.bottom ?? _color.bottom
+      .._color.right = target._color.right ?? _color.right;
+  }
+
   void _mergeWidth(Declaration declaration) {
     var sizes = declaration.expressions?.expressions
-        .whereType<LiteralTerm>()
-        .where((e) => Dimen.isDimen(e))
-        .map((e) => Dimen.fromLiteral(e))
-    .whereNotNull()
-        .toList() ?? [];
+            .whereType<LiteralTerm>()
+            .where((e) => Dimen.isDimen(e))
+            .map((e) => Dimen.fromLiteral(e))
+            .whereNotNull()
+            .toList() ??
+        [];
     switch (declaration.property) {
       case 'border-top':
       case 'border-top-width':
@@ -980,66 +1054,79 @@ class _BorderComponent extends _StyleComponent<Border> {
   Border build(BuildContext context) => Border(
         top: _width.top != null
             ? BorderSide(
-                color: _color.top ?? Colors.black, width: _width.top!.dimension(context))
+                color: _color.top ?? Colors.black,
+                width: _width.top!.dimension(context))
             : BorderSide.none,
         right: _width.right != null
             ? BorderSide(
-                color: _color.right ?? Colors.black, width: _width.right!.dimension(context))
+                color: _color.right ?? Colors.black,
+                width: _width.right!.dimension(context))
             : BorderSide.none,
         bottom: _width.bottom != null
             ? BorderSide(
-                color: _color.bottom ?? Colors.black, width: _width.bottom!.dimension(context))
+                color: _color.bottom ?? Colors.black,
+                width: _width.bottom!.dimension(context))
             : BorderSide.none,
         left: _width.left != null
             ? BorderSide(
-                color: _color.left ?? Colors.black, width: _width.left!.dimension(context))
+                color: _color.left ?? Colors.black,
+                width: _width.left!.dimension(context))
             : BorderSide.none,
       );
 }
 
-class _BorderRadiusComponent extends _StyleComponent<BorderRadius> {
+class _BorderRadiusComponent extends StyleComponent<BorderRadius> {
   final _Vector4<Dimen> _radiusX = _Vector4<Dimen>();
   final _Vector4<Dimen> _radiusY = _Vector4<Dimen>();
 
   @override
   void merge(Declaration declaration, {String? basePath}) {
     var exps = declaration.expressions?.expressions;
-    var indexOfOp = exps?.indexWhere((element) => element is OperatorSlash) ?? -1;
+    var indexOfOp =
+        exps?.indexWhere((element) => element is OperatorSlash) ?? -1;
     switch (declaration.property) {
       case 'border-radius':
         List<LiteralTerm>? sizesX;
         List<LiteralTerm>? sizesY;
         if (indexOfOp < 0) {
-          sizesX = sizesY = exps?.where((e) => Dimen.isDimen(e))
+          sizesX = sizesY = exps
+              ?.where((e) => Dimen.isDimen(e))
               .map((e) => e as LiteralTerm)
               .toList();
         } else {
-          sizesX = exps?.sublist(0, indexOfOp)
+          sizesX = exps
+              ?.sublist(0, indexOfOp)
               .where((e) => Dimen.isDimen(e))
               .map((e) => e as LiteralTerm)
               .toList();
-          sizesY = exps?.sublist(indexOfOp + 1)
+          sizesY = exps
+              ?.sublist(indexOfOp + 1)
               .where((e) => Dimen.isDimen(e))
               .map((e) => e as LiteralTerm)
               .toList();
         }
-        _radiusX.fill(sizesX?.map((e) => Dimen.fromLiteral(e)).whereNotNull().toList());
-        _radiusY.fill(sizesY?.map((e) => Dimen.fromLiteral(e)).whereNotNull().toList());
+        _radiusX.fill(
+            sizesX?.map((e) => Dimen.fromLiteral(e)).whereNotNull().toList());
+        _radiusY.fill(
+            sizesY?.map((e) => Dimen.fromLiteral(e)).whereNotNull().toList());
         break;
       case 'border-top-left-radius':
         if (indexOfOp < 0) {
-          final r = exps?.whereType<LiteralTerm>()
+          final r = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           if (r != null) {
             _radiusX.top = _radiusY.top = Dimen.fromLiteral(r);
           }
         } else {
-          final rX = exps?.whereType<LiteralTerm>()
+          final rX = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           _radiusX.top = Dimen.fromLiteral(rX);
-          final rY = exps?.whereType<LiteralTerm>()
+          final rY = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           _radiusY.top = Dimen.fromLiteral(rY);
@@ -1047,18 +1134,21 @@ class _BorderRadiusComponent extends _StyleComponent<BorderRadius> {
         break;
       case 'border-top-right-radius':
         if (indexOfOp < 0) {
-          final r = exps?.whereType<LiteralTerm>()
+          final r = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           if (r != null) {
             _radiusX.right = _radiusY.right = Dimen.fromLiteral(r);
           }
         } else {
-          final rX = exps?.whereType<LiteralTerm>()
+          final rX = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           _radiusX.right = Dimen.fromLiteral(rX);
-          final rY = exps?.whereType<LiteralTerm>()
+          final rY = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           _radiusY.right = Dimen.fromLiteral(rY);
@@ -1066,18 +1156,21 @@ class _BorderRadiusComponent extends _StyleComponent<BorderRadius> {
         break;
       case 'border-bottom-right-radius':
         if (indexOfOp < 0) {
-          final r = exps?.whereType<LiteralTerm>()
+          final r = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           if (r != null) {
             _radiusX.bottom = _radiusY.bottom = Dimen.fromLiteral(r);
           }
         } else {
-          final rX = exps?.whereType<LiteralTerm>()
+          final rX = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           _radiusX.bottom = Dimen.fromLiteral(rX);
-          final rY = exps?.whereType<LiteralTerm>()
+          final rY = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           _radiusY.bottom = Dimen.fromLiteral(rY);
@@ -1085,18 +1178,21 @@ class _BorderRadiusComponent extends _StyleComponent<BorderRadius> {
         break;
       case 'border-bottom-left-radius':
         if (indexOfOp < 0) {
-          final r = exps?.whereType<LiteralTerm>()
+          final r = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           if (r != null) {
             _radiusX.left = _radiusY.left = Dimen.fromLiteral(r);
           }
         } else {
-          final rX = exps?.whereType<LiteralTerm>()
+          final rX = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           _radiusX.left = Dimen.fromLiteral(rX);
-          final rY = exps?.whereType<LiteralTerm>()
+          final rY = exps
+              ?.whereType<LiteralTerm>()
               .where((e) => Dimen.isDimen(e))
               .firstOrNull;
           _radiusY.left = Dimen.fromLiteral(rY);
@@ -1106,21 +1202,36 @@ class _BorderRadiusComponent extends _StyleComponent<BorderRadius> {
   }
 
   @override
+  StyleComponent<BorderRadius> mergeWith(
+      StyleComponent<BorderRadius> component) {
+    final target = component as _BorderRadiusComponent;
+    return _BorderRadiusComponent()
+      .._radiusX.top = target._radiusX.top ?? _radiusX.top
+      .._radiusX.left = target._radiusX.left ?? _radiusX.left
+      .._radiusX.bottom = target._radiusX.bottom ?? _radiusX.bottom
+      .._radiusX.right = target._radiusX.right ?? _radiusX.right
+      .._radiusY.top = target._radiusY.top ?? _radiusY.top
+      .._radiusY.left = target._radiusY.left ?? _radiusY.left
+      .._radiusY.bottom = target._radiusY.bottom ?? _radiusY.bottom
+      .._radiusY.right = target._radiusY.right ?? _radiusY.right;
+  }
+
+  @override
   BorderRadius build(BuildContext context) {
     return BorderRadius.only(
-      topLeft: Radius.elliptical(
-          _radiusX.top?.dimension(context) ?? 0, _radiusY.top?.dimension(context) ?? 0),
-      topRight: Radius.elliptical(
-          _radiusX.right?.dimension(context) ?? 0, _radiusY.right?.dimension(context) ?? 0),
+      topLeft: Radius.elliptical(_radiusX.top?.dimension(context) ?? 0,
+          _radiusY.top?.dimension(context) ?? 0),
+      topRight: Radius.elliptical(_radiusX.right?.dimension(context) ?? 0,
+          _radiusY.right?.dimension(context) ?? 0),
       bottomRight: Radius.elliptical(_radiusX.bottom?.dimension(context) ?? 0,
           _radiusY.bottom?.dimension(context) ?? 0),
-      bottomLeft: Radius.elliptical(
-          _radiusX.left?.dimension(context) ?? 0, _radiusY.left?.dimension(context) ?? 0),
+      bottomLeft: Radius.elliptical(_radiusX.left?.dimension(context) ?? 0,
+          _radiusY.left?.dimension(context) ?? 0),
     );
   }
 }
 
-class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
+class _BorderImageComponent extends StyleComponent<_BackgroundCompose> {
   Uri? _uri;
   final _Vector4<Dimen> _centerSlice = _Vector4();
 
@@ -1149,6 +1260,22 @@ class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
   }
 
   @override
+  StyleComponent<_BackgroundCompose> mergeWith(
+      StyleComponent<_BackgroundCompose> component) {
+    final target = component as _BorderImageComponent;
+    return _BorderImageComponent()
+      .._uri = target._uri ?? _uri
+      .._centerSlice.top =
+          target._uri != null ? target._centerSlice.top : _centerSlice.top
+      .._centerSlice.left =
+          target._uri != null ? target._centerSlice.left : _centerSlice.left
+      .._centerSlice.bottom =
+          target._uri != null ? target._centerSlice.bottom : _centerSlice.bottom
+      .._centerSlice.right =
+          target._uri != null ? target._centerSlice.right : _centerSlice.right;
+  }
+
+  @override
   _BackgroundCompose build(BuildContext context) {
     DecorationImage? image;
     if (_uri != null) {
@@ -1171,7 +1298,7 @@ class _BorderImageComponent extends _StyleComponent<_BackgroundCompose> {
   }
 }
 
-class _BoxShadowComponent extends _StyleComponent<_ShadowCompose> {
+class _BoxShadowComponent extends StyleComponent<_ShadowCompose> {
   Color? _color;
   Dimen? _offsetX;
   Dimen? _offsetY;
@@ -1184,6 +1311,19 @@ class _BoxShadowComponent extends _StyleComponent<_ShadowCompose> {
     if (declaration.expressions != null) {
       _merge(declaration.expressions!);
     }
+  }
+
+  @override
+  StyleComponent<_ShadowCompose> mergeWith(
+      StyleComponent<_ShadowCompose> component) {
+    final target = component as _BoxShadowComponent;
+    return _BoxShadowComponent()
+      .._color = target._color ?? _color
+      .._offsetX = target._offsetX ?? _offsetX
+      .._offsetY = target._offsetY ?? _offsetY
+      .._blur = target._blur ?? _blur
+      .._spread = target._spread ?? _spread
+      .._inset = target._color != null ? target._inset : _inset;
   }
 
   void _merge(Expressions expressions) {
@@ -1225,7 +1365,7 @@ class _BoxShadowComponent extends _StyleComponent<_ShadowCompose> {
       );
 }
 
-class _OpacityComponent extends _StyleComponent<double> {
+class _OpacityComponent extends StyleComponent<double> {
   double _opacity = 1.0;
 
   @override
@@ -1238,10 +1378,16 @@ class _OpacityComponent extends _StyleComponent<double> {
   }
 
   @override
+  StyleComponent<double> mergeWith(StyleComponent<double> component) {
+    final target = component as _OpacityComponent;
+    return target;
+  }
+
+  @override
   double build(BuildContext context) => _opacity;
 }
 
-class _FilterComponent extends _StyleComponent<_FilterCompose> {
+class _FilterComponent extends StyleComponent<_FilterCompose> {
   ColorMatrix? _colorMatrix;
   _BoxShadowComponent? _dropShadow;
   Dimen? _blurRadius;
@@ -1254,6 +1400,17 @@ class _FilterComponent extends _StyleComponent<_FilterCompose> {
         .forEach((element) {
       _merge(element);
     });
+  }
+
+  @override
+  StyleComponent<_FilterCompose> mergeWith(
+      StyleComponent<_FilterCompose> component) {
+    final target = component as _FilterComponent;
+    return _FilterComponent()
+      .._colorMatrix = target._colorMatrix ?? _colorMatrix
+      .._dropShadow = target._dropShadow ?? _dropShadow
+      .._blurRadius = target._blurRadius ?? _blurRadius
+      .._opacity = target._opacity;
   }
 
   void _merge(FunctionTerm exp) {
@@ -1354,7 +1511,7 @@ class _FilterComponent extends _StyleComponent<_FilterCompose> {
       );
 }
 
-class _AlignComponent extends _StyleComponent<Alignment?> {
+class _AlignComponent extends StyleComponent<Alignment?> {
   Alignment? _alignment;
 
   @override
@@ -1363,11 +1520,17 @@ class _AlignComponent extends _StyleComponent<Alignment?> {
   }
 
   @override
+  StyleComponent<Alignment?> mergeWith(StyleComponent<Alignment?> component) {
+    final target = component as _AlignComponent;
+    return _AlignComponent().._alignment = target._alignment ?? _alignment;
+  }
+
+  @override
   Alignment? build(BuildContext context) => _alignment;
 }
 
 /// Text stuff
-class _TextColorComponent extends _StyleComponent<Color?> {
+class _TextColorComponent extends StyleComponent<Color?> {
   Color? _color;
 
   @override
@@ -1383,10 +1546,16 @@ class _TextColorComponent extends _StyleComponent<Color?> {
   }
 
   @override
+  StyleComponent<ui.Color?> mergeWith(StyleComponent<ui.Color?> component) {
+    final target = component as _TextColorComponent;
+    return _TextColorComponent().._color = target._color ?? _color;
+  }
+
+  @override
   Color? build(BuildContext context) => _color;
 }
 
-class _TextAlignComponent extends _StyleComponent<TextAlign> {
+class _TextAlignComponent extends StyleComponent<TextAlign> {
   late TextAlign _alignment;
 
   @override
@@ -1396,10 +1565,17 @@ class _TextAlignComponent extends _StyleComponent<TextAlign> {
   }
 
   @override
+  StyleComponent<ui.TextAlign> mergeWith(
+      StyleComponent<ui.TextAlign> component) {
+    final target = component as _TextAlignComponent;
+    return target;
+  }
+
+  @override
   TextAlign build(BuildContext context) => _alignment;
 }
 
-class _FontComponent extends _StyleComponent<FontExpression?> {
+class _FontComponent extends StyleComponent<FontExpression?> {
   FontExpression? _font;
 
   @override
@@ -1410,11 +1586,18 @@ class _FontComponent extends _StyleComponent<FontExpression?> {
   }
 
   @override
+  StyleComponent<FontExpression?> mergeWith(
+      StyleComponent<FontExpression?> component) {
+    final target = component as _FontComponent;
+    return _FontComponent().._font = target._font ?? _font;
+  }
+
+  @override
   FontExpression? build(BuildContext context) => _font;
 }
 
 class _TransitionComponent
-    extends _StyleComponent<Map<String, _TransitionCompose>> {
+    extends StyleComponent<Map<String, _TransitionCompose>> {
   final List<String> _targets = [];
   final List<Duration> _durations = [];
   final List<Curve> _curves = [];
@@ -1442,6 +1625,12 @@ class _TransitionComponent
         _mergeCurve(declaration.expressions);
         break;
     }
+  }
+
+  @override
+  StyleComponent<Map<String, _TransitionCompose>> mergeWith(
+      StyleComponent<Map<String, _TransitionCompose>> component) {
+    return component;
   }
 
   bool _mergeTarget(Expressions? expressions) {
@@ -1479,7 +1668,7 @@ class _TransitionComponent
   }
 }
 
-class _OverFlowComponent extends _StyleComponent<bool> {
+class _OverFlowComponent extends StyleComponent<bool> {
   bool _overflowHidden = false;
 
   @override
@@ -1492,10 +1681,15 @@ class _OverFlowComponent extends _StyleComponent<bool> {
   }
 
   @override
+  StyleComponent<bool> mergeWith(StyleComponent<bool> component) {
+    return component;
+  }
+
+  @override
   bool build(BuildContext context) => _overflowHidden;
 }
 
-class _TransformComponent extends _StyleComponent<_TransformCompose> {
+class _TransformComponent extends StyleComponent<_TransformCompose> {
   late Matrix4 _matrix;
   Alignment? _origin;
 
@@ -1514,6 +1708,11 @@ class _TransformComponent extends _StyleComponent<_TransformCompose> {
         _mergeOrigin(declaration);
         break;
     }
+  }
+
+  @override
+  StyleComponent<_TransformCompose> mergeWith(StyleComponent<_TransformCompose> component) {
+    return component;
   }
 
   void _mergeMatrix(Declaration declaration) {

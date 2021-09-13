@@ -7,7 +7,8 @@ class StyledScaffold extends StatelessWidget {
   final WidgetBuilder builder;
   final Widget? placeholder;
 
-  const StyledScaffold({Key? key, required this.builder, this.style, this.placeholder})
+  const StyledScaffold(
+      {Key? key, required this.builder, this.style, this.placeholder})
       : super(key: key);
 
   @override
@@ -23,13 +24,20 @@ class StyledScaffold extends StatelessWidget {
   }
 }
 
+class _ComputeBundle {
+  final _SelectorSection selector;
+  final List<StyleSheet> styles;
+
+  _ComputeBundle(this.selector, this.styles);
+}
+
 class _ComputedStyle {
   final Map<Selector, DeclarationGroup> matched = {};
-  final Map<Type, _StyleComponent> styles = {};
-  final Map<PseudoElementSelector, Map<Type, _StyleComponent>> elementStyles =
+  final Map<Type, StyleComponent> styles = {};
+  final Map<PseudoElementSelector, Map<Type, StyleComponent>> elementStyles =
       {};
 
-  List<_StyleComponent> getComponentsByElements(List<String> elements) =>
+  List<StyleComponent> getComponentsByElements(List<String> elements) =>
       elementStyles.entries
           .where((e) => elements.contains(e.key.name.trim()))
           .map((e) => e.value.values)
@@ -42,34 +50,66 @@ class _SelectorSection {
   final List<String> sections;
   final int index;
 
-  _ComputedStyle? _privateStyle;
-
   static final Map<_SelectorSection, _ComputedStyle> store = {};
-
-  static _ComputedStyle? getComputedStyle(_SelectorSection selector) =>
-      store.entries
-          .firstWhereOrNull((element) => element.key == selector)
-          ?.value;
-
-  static _ComputedStyle createComputedStyle(_SelectorSection selector) {
-    var style = _ComputedStyle();
-    store[selector.copy()] = style;
-    return style;
-  }
 
   static void reset() {
     store.clear();
   }
 
-  _ComputedStyle? get computeStyle => _privateStyle ?? getComputedStyle(this);
+  static _ComputedStyle resolve(_ComputeBundle bundle) {
+    if (store.containsKey(bundle.selector)) {
+      return store[bundle.selector]!;
+    }
+    print('resolve start ===================> ${DateTime.now().millisecond}');
+    final style = _ComputedStyle();
+    bundle.styles.forEach((stylesheet) {
+      stylesheet.ruleSets.forEach((ruleSet) {
+        var matched = ruleSet.selectorGroup.selectors
+            .where((s) => s.match(bundle.selector));
+        matched.forEach((selector) {
+          style.matched[selector] = ruleSet.declarationGroup
+            ..basePath = stylesheet.basePath;
+        });
+      });
+    });
 
-  _SelectorSection({this.parent, required List<String> sections, this.index = -1})
+    var sortedEntries =
+        style.matched.entries.where((e) => !e.key.isElement).toList();
+    sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+    print('merge end ===================> ${DateTime.now().millisecond}');
+    style.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
+    print('merge end ===================> ${DateTime.now().millisecond}');
+    sortedEntries =
+        style.matched.entries.where((e) => e.key.isElement).toList();
+    sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
+    style.elementStyles.clear();
+    final elements = {
+      for (var e in sortedEntries)
+        e.key.simpleSelectorSequences.last.simpleSelector
+                as PseudoElementSelector:
+            sortedEntries
+                .where((element) => element.key == e.key)
+                .map((e) => e.value)
+                .toList()
+    };
+    elements.forEach((key, value) {
+      style.elementStyles[key] = _merge(value);
+    });
+    store[bundle.selector.copy()] = style;
+    print('resolve end ===================> ${DateTime.now().millisecond}');
+    return style;
+  }
+
+  _ComputedStyle? get computeStyle => _SelectorSection.store[this];
+
+  _SelectorSection(
+      {this.parent, required List<String> sections, this.index = -1})
       : sections = sections.toList(growable: true) {
     this.sections.sort((a, b) => a.compareTo(b));
   }
 
   _SelectorSection copy(
-      {_SelectorSection? parent, List<String>? sections, int? index}) =>
+          {_SelectorSection? parent, List<String>? sections, int? index}) =>
       _SelectorSection(
         parent: parent?.copy() ?? this.parent?.copy(),
         sections: sections ?? this.sections.toList(),
@@ -95,95 +135,46 @@ class _SelectorSection {
 
 class _Style extends StatelessWidget {
   final _SelectorSection selector;
-  final WidgetBuilder builder;
+  final Widget? child;
+  final WidgetBuilder? builder;
 
-  _Style({Key? key, required this.builder, required this.selector})
-      : super(key: key);
-
-  void _resolve(BuildContext context) {
-    context.visitAncestorElements((element) {
-      if (element.widget is _Style) {
-        selector.parent = (element.widget as _Style).selector;
-        return false;
-      }
-      return true;
-    });
+  _Style({Key? key, this.child, this.builder, required this.selector})
+      : super(key: key) {
+    assert(child != null || builder != null);
   }
 
-  Widget _applyStyle(BuildContext context, Widget child) {
+  Widget _applyStyle(
+      BuildContext context, Widget child, _ComputedStyle? style) {
     var res = child;
     if (child is TabBar) {
-      res = _StyleComponent.decorateTabIndicator(context, res as TabBar,
-          components: selector.computeStyle
-              ?.getComponentsByElements(['tab-indicator']));
-      res = _StyleComponent.decorateTabControl(context, res,
-          components:
-              selector.computeStyle?.getComponentsByElements(['tab-control']));
-      res = _StyleComponent.decorateTabControl(context, res,
+      res = StyleComponent.decorateTabIndicator(context, res as TabBar,
+          components: style?.getComponentsByElements(['tab-indicator']));
+      res = StyleComponent.decorateTabControl(context, res,
+          components: style?.getComponentsByElements(['tab-control']));
+      res = StyleComponent.decorateTabControl(context, res,
           selected: true,
-          components: selector.computeStyle
-              ?.getComponentsByElements(['tab-control-selected']));
+          components: style?.getComponentsByElements(['tab-control-selected']));
     }
     // if (child is TextField) {
     //   res = _StyleComponent.decorateTextFieldHint(context, res,
     //       components: selector.computeStyle
     //           ?.getComponentsByElements(['hint']));
     // }
-    return _StyleComponent.decorate(context, res,
-        components: selector.computeStyle?.styles.values);
+    return StyleComponent.decorate(context, res,
+        components: style?.styles.values);
   }
 
   @override
   Widget build(BuildContext context) {
-    _resolve(context);
+    context._resolveTree(selector);
     return BlocBuilder<StyleCubit, List<StyleSheet>>(
         builder: (BuildContext context, List<StyleSheet> state) {
       if (state.isNotEmpty) {
-        resolve(state);
-        var child = builder.call(context);
-        return _applyStyle(context, child);
+        final style = _SelectorSection.resolve(_ComputeBundle(selector, state));
+        return _applyStyle(context, builder?.call(context) ?? child!, style);
       }
-      return builder.call(context);
+      return builder?.call(context) ?? child ?? Container();
     });
-  }
-
-  void resolve(List<StyleSheet> styles) {
-    var store = _SelectorSection.getComputedStyle(selector);
-    if (store == null) {
-      store = _SelectorSection.createComputedStyle(selector);
-      styles.forEach((stylesheet) {
-        stylesheet.ruleSets.forEach((ruleSet) {
-          var matched =
-              ruleSet.selectorGroup?.selectors.where((s) => s.match(selector));
-          matched?.forEach((selector) {
-            store!.matched[selector] = ruleSet.declarationGroup
-              ..basePath = stylesheet.basePath;
-          });
-        });
-      });
-
-      var sortedEntries =
-          store.matched.entries.where((e) => !e.key.isElement).toList();
-      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-      store.styles.clear();
-      store.styles.addAll(_merge(sortedEntries.map((e) => e.value)));
-      sortedEntries =
-          store.matched.entries.where((e) => e.key.isElement).toList();
-      sortedEntries.sort((a, b) => a.key.weight.compareTo(b.key.weight));
-      store.elementStyles.clear();
-      final elements = {
-        for (var e in sortedEntries)
-          e.key.simpleSelectorSequences.last.simpleSelector
-                  as PseudoElementSelector:
-              sortedEntries
-                  .where((element) => element.key == e.key)
-                  .map((e) => e.value)
-                  .toList()
-      };
-      elements.forEach((key, value) {
-        store!.elementStyles[key] = _merge(value);
-      });
-    }
   }
 }
 
@@ -193,9 +184,9 @@ class _PreferredSizeStyle extends _Style implements PreferredSizeWidget {
   _PreferredSizeStyle({
     Key? key,
     required this.sizeProvider,
-    required WidgetBuilder builder,
+    required Widget child,
     required _SelectorSection selector,
-  }) : super(key: key, builder: builder, selector: selector);
+  }) : super(key: key, child: child, selector: selector);
 
   @override
   Size get preferredSize => sizeProvider();
@@ -217,7 +208,7 @@ class _TextStyleWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _Style(
         selector: selector,
-        builder: (context) => _StyleComponent.decorateText(context, this,
+        builder: (context) => StyleComponent.decorateText(context, this,
             components: selector.computeStyle?.styles.values),
       );
 }

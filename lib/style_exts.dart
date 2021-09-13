@@ -29,8 +29,9 @@ extension _SelectorSequenceExt on SimpleSelectorSequence {
             .any((element) => simpleSelector.match(element, selector.index)) ??
         false;
     if (matched) {
-      if (isCombinatorGreater || isCombinatorDescendant)
+      if (isCombinatorGreater || isCombinatorDescendant) {
         return selector!.parent;
+      }
       if (isCombinatorPlus) return selector!.index > 0 ? selector : null;
       return selector;
     } else if (!strict && selector!.parent != null) {
@@ -324,16 +325,13 @@ extension TabBarExt on TabBar {
       );
 }
 
-Map<Type, _StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
-  return groups.fold(<Type, _StyleComponent>{},
-      (Map<Type, _StyleComponent> previousValue, group) {
-    group.declarations.whereType<Declaration>().forEach((declaration) {
-      var type = _StyleComponent.typeOf(declaration);
-      if (type != null) {
-        var component = previousValue.putIfAbsent(
-            type, () => _StyleComponent.create(type)!);
-        component.merge(declaration, basePath: group.basePath);
-      }
+Map<Type, StyleComponent> _merge(Iterable<DeclarationGroup> groups) {
+  return groups.fold(<Type, StyleComponent>{},
+      (Map<Type, StyleComponent> previousValue, group) {
+    group.styles.forEach((key, value) {
+      var component =
+          previousValue.putIfAbsent(key, () => StyleComponent.create(key)!);
+      previousValue[key] = component.mergeWith(value);
     });
     return previousValue;
   });
@@ -347,11 +345,11 @@ extension StyleExt on Widget {
           ? _PreferredSizeStyle(
               sizeProvider: () => (this as PreferredSizeWidget).preferredSize,
               selector: section,
-              builder: (context) => this,
+              child: this,
             )
           : _Style(
               selector: section,
-              builder: (context) => this,
+              child: this,
             );
     }
     if (selectors is List) {
@@ -361,11 +359,11 @@ extension StyleExt on Widget {
           ? _PreferredSizeStyle(
               sizeProvider: () => (this as PreferredSizeWidget).preferredSize,
               selector: section,
-              builder: (context) => this,
+              child: this,
             )
           : _Style(
               selector: section,
-              builder: (context) => this,
+              child: this,
             );
     }
     return this;
@@ -389,6 +387,17 @@ enum TextStyleType {
 }
 
 extension BuildContextExt on BuildContext {
+
+  void _resolveTree(_SelectorSection selector) {
+    visitAncestorElements((element) {
+      if (element.widget is _Style) {
+        selector.parent = (element.widget as _Style).selector;
+        return false;
+      }
+      return true;
+    });
+  }
+
   Widget? styledText(dynamic selectors,
       {int index = -1,
       TextStyleType defaultStyleType = TextStyleType.BODY1,

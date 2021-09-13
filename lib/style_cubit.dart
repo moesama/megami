@@ -59,6 +59,10 @@ class StyleCubit extends Cubit<List<StyleSheet>> {
       ..key = key;
     final list = origin?.toList(growable: true) ?? [];
     list.add(stylesheet);
+    stylesheet.ruleSets.forEach((element) {
+      element.declarationGroup.basePath = basePath;
+      element.declarationGroup.resolve();
+    });
     return list;
   }
 
